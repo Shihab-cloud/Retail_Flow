@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Alerts | Technologia</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: white; margin: 0; }
+        header { background: #111827; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 24px; }
+        nav a { color: white; text-decoration: none; margin-left: 18px; font-weight: 600; }
+        nav a:hover { color: #22c55e; }
+        .table-container { padding: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid #334155; text-align: left; }
+        th { color: #94a3b8; }
+        tr:hover { background: #1e293b; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Alerts</h1>
+    <nav>
+        <a href="{% url 'home' %}">Products</a>
+        <a href="{% url 'categories' %}">Categories</a>
+        <a href="{% url 'cart' %}">Cart</a>
+        <a href="{% url 'customers' %}">Customers</a>
+        <a href="{% url 'sales' %}">Sales</a>
+        <a href="{% url 'alerts' %}">Alerts</a>
+    </nav>
+</header>
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Product</th>
+                <th>Message</th>
+                <th>Created</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert.id }}</td>
+                <td>{{ alert.product.name }}</td>
+                <td>{{ alert.message }}</td>
+                <td>{{ alert.created_at|date:'Y-m-d H:i' }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No alerts found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

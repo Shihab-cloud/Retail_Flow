@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Cart - Technologia</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            margin: 0;
+        }
+        header {
+            background: #111827;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        nav a:hover {
+            color: #22c55e;
+        }
+        .content {
+            padding: 20px;
+        }
+        .message {
+            background: #164e63;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            color: #d1fae5;
+        }
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table th,
+        .table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #334155;
+            text-align: left;
+        }
+        .table th {
+            color: #94a3b8;
+        }
+        .quantity-input {
+            width: 72px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: white;
+        }
+        .button-link {
+            display: inline-block;
+            padding: 10px 18px;
+            background: #22c55e;
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .button-link:hover {
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Technologia Cart</h1>
+    <nav>
+        <a href="{% url 'home' %}">Products</a>
+        <a href="{% url 'categories' %}">Categories</a>
+        <a href="{% url 'cart' %}">Cart</a>
+        <a href="{% url 'customers' %}">Customers</a>
+        <a href="{% url 'sales' %}">Sales</a>
+        <a href="{% url 'alerts' %}">Alerts</a>
+        {% if customer %}
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'signup' %}">Signup</a>
+        {% endif %}
+    </nav>
+</header>
+
+<div class="content">
+    {% if cart_message %}
+    <div class="message">{{ cart_message }}</div>
+    {% endif %}
+
+    {% if items %}
+    <form method="post" action="{% url 'update_cart' %}">
+        {% csrf_token %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Subtotal</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items %}
+                <tr>
+                    <td>{{ item.product.name }}</td>
+                    <td>{{ item.product.price }}</td>
+                    <td>
+                        <input class="quantity-input" type="number" name="quantity_{{ item.product.id }}" min="0" value="{{ item.quantity }}">
+                    </td>
+                    <td>{{ item.total }}</td>
+                    <td><a class="button-link" href="{% url 'remove_from_cart' item.product.id %}">Remove</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <button type="submit" class="button-link">Update cart</button>
+    </form>
+
+    <div style="margin-top: 30px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; align-items: center;">
+        <strong style="font-size: 18px;">Total: {{ total }}</strong>
+        <a class="button-link" href="{% url 'purchase_cart' %}">Checkout</a>
+    </div>
+    {% else %}
+    <div class="message">Your cart is empty. Add products from the home page to continue.</div>
+    {% endif %}
+</div>
+</body>
+</html>

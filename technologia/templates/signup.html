@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Sign Up - Technologia</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .box { background: #111827; padding: 32px; border-radius: 18px; width: min(520px, 95vw); box-shadow: 0 0 25px rgba(0,0,0,0.45); }
+        h1 { margin-top: 0; }
+        .field { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; color: #cbd5e1; }
+        input, textarea { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; }
+        textarea { min-height: 100px; resize: vertical; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 10px; background: #22c55e; color: white; font-size: 16px; cursor: pointer; }
+        button:hover { background: #16a34a; }
+        .footer { margin-top: 16px; color: #94a3b8; }
+        .footer a { color: #22c55e; text-decoration: none; }
+        .error { background: #831843; padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; color: #ffe4e6; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h1>Create Account</h1>
+    {% if errors %}
+    <div class="error">
+        <ul style="margin:0; padding-left:18px;">
+            {% for error in errors %}
+            <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="field">
+            <label for="name">Name</label>
+            <input id="name" type="text" name="name" required>
+        </div>
+        <div class="field">
+            <label for="email">Email</label>
+            <input id="email" type="email" name="email" required>
+        </div>
+        <div class="field">
+            <label for="phone">Phone</label>
+            <input id="phone" type="text" name="phone" required>
+        </div>
+        <div class="field">
+            <label for="birthdate">Birthdate</label>
+            <input id="birthdate" type="date" name="birthdate" required>
+        </div>
+        <p style="color:#94a3b8; margin-bottom: 18px;">Shipping address will be collected when you make a purchase.</p>
+        <div class="field">
+            <label for="password">Password</label>
+            <input id="password" type="password" name="password" required>
+        </div>
+        <div class="field">
+            <label for="password_confirm">Confirm Password</label>
+            <input id="password_confirm" type="password" name="password_confirm" required>
+        </div>
+        <button type="submit">Sign Up</button>
+    </form>
+    <div class="footer">
+        Already have an account? <a href="{% url 'login' %}">Login</a>
+    </div>
+</div>
+</body>
+</html>

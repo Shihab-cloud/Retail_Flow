@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Technologia Store</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: white;
+            margin: 0;
+        }
+        header {
+            background: #111827;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        nav a:hover {
+            color: #22c55e;
+        }
+        .user-info {
+            color: #94a3b8;
+        }
+        .hero {
+            padding: 40px 20px;
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            align-items: center;
+        }
+        .hero h2 {
+            font-size: 42px;
+            margin: 0 0 12px;
+            line-height: 1.1;
+        }
+        .hero p {
+            max-width: 720px;
+            color: #cbd5e1;
+            line-height: 1.7;
+        }
+        .hero-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-top: 28px;
+        }
+        .hero-card {
+            background: #1e293b;
+            border-radius: 18px;
+            padding: 18px;
+        }
+        .hero-card strong {
+            display: block;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .carousel-section {
+            padding: 0 20px 20px;
+        }
+        .carousel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+        .carousel {
+            position: relative;
+            margin-top: 18px;
+            overflow: hidden;
+            border-radius: 20px;
+            background: #111827;
+            padding: 24px 0;
+        }
+        .carousel-track {
+            display: flex;
+            transition: transform 0.35s ease;
+        }
+        .carousel-item {
+            min-width: 280px;
+            margin: 0 12px;
+            background: #1e293b;
+            border-radius: 18px;
+            padding: 20px;
+            box-shadow: 0 0 35px rgba(0,0,0,0.2);
+        }
+        .carousel-item h3 {
+            margin-top: 0;
+        }
+        .carousel-item p {
+            color: #cbd5e1;
+            margin: 8px 0;
+        }
+        .carousel-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 48px;
+            height: 48px;
+            border: none;
+            border-radius: 50%;
+            background: rgba(34,197,94,0.95);
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 2;
+        }
+        .carousel-button.prev { left: 12px; }
+        .carousel-button.next { right: 12px; }
+        .category-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            padding: 0 20px 20px;
+        }
+        .category-link {
+            padding: 10px 16px;
+            background: #1e293b;
+            border-radius: 999px;
+            text-decoration: none;
+            color: #fff;
+            font-weight: 600;
+        }
+        .section-title {
+            margin: 0 0 16px;
+            color: #e2e8f0;
+        }
+        .summary {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            padding: 0 20px 20px;
+        }
+        .summary .stat {
+            background: #1e293b;
+            padding: 18px;
+            border-radius: 14px;
+            min-width: 140px;
+            text-align: center;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 0 20px 40px;
+        }
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 12px rgba(0,0,0,0.5);
+        }
+        .card h2 {
+            margin-top: 0;
+        }
+        .card p {
+            color: #cbd5e1;
+        }
+        .button-link {
+            display: inline-block;
+            margin-top: 12px;
+            padding: 10px 20px;
+            background: #22c55e;
+            border-radius: 10px;
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+        .button-link:hover {
+            background: #16a34a;
+        }
+        input[type="number"] {
+            width: 72px;
+            margin-left: 8px;
+            padding: 6px 8px;
+            border-radius: 8px;
+            border: 1px solid #334155;
+            background: #0f172a;
+            color: #fff;
+        }
+        @media (max-width: 800px) {
+            .hero { grid-template-columns: 1fr; }
+            .carousel-button { display: none; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Technologia Retail</h1>
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'categories' %}">Categories</a>
+        <a href="{% url 'cart' %}">Cart</a>
+        <a href="{% url 'customers' %}">Customers</a>
+        <a href="{% url 'sales' %}">Sales</a>
+        <a href="{% url 'alerts' %}">Alerts</a>
+        {% if customer %}
+            <span class="user-info">Signed in as {{ customer.name }}</span>
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'signup' %}">Signup</a>
+        {% endif %}
+    </nav>
+</header>
+
+<div class="hero">
+    <div>
+        <h2>Sell smarter with Technologia</h2>
+        <p>Technologia is your retail dashboard for inventory, orders, and customer flow. Ship faster, manage best-selling products, and collect address details only at checkout for a cleaner signup process.</p>
+        <div class="hero-cards">
+            <div class="hero-card">
+                <strong>Faster checkout</strong>
+                <p>Address is collected at purchase time, not during signup.</p>
+            </div>
+            <div class="hero-card">
+                <strong>Category browsing</strong>
+                <p>Products are grouped by category so shoppers can find items quickly.</p>
+            </div>
+            <div class="hero-card">
+                <strong>Top sellers</strong>
+                <p>Most sold items are highlighted first in the carousel.</p>
+            </div>
+        </div>
+    </div>
+    <div class="hero-card" style="padding: 28px;">
+        <h3>Shop in one place</h3>
+        <p>Product discovery, order capture, and shipping address selection all work together to make purchases feel smooth.</p>
+    </div>
+</div>
+
+<section class="carousel-section">
+    <div class="carousel-header">
+        <div>
+            <h2 class="section-title">Most Sold Products</h2>
+            <p>Top items ranked by quantity sold. Demos and analytics pages can be added later.</p>
+        </div>
+    </div>
+    <div class="carousel" id="carousel">
+        <button class="carousel-button prev" onclick="moveSlide(-1)">‹</button>
+        <div class="carousel-track" id="carouselTrack">
+            {% for product in top_sellers %}
+            <div class="carousel-item">
+                <h3>{{ product.name }}</h3>
+                <p><strong>Sold:</strong> {{ product.sold_qty }}</p>
+                <p><strong>Price:</strong> {{ product.price }}</p>
+                <p><strong>Stock:</strong> {{ product.stock }}</p>
+            </div>
+            {% empty %}
+            <div class="carousel-item">
+                <h3>No sales yet</h3>
+                <p>Add orders to start tracking your best-selling products.</p>
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-button next" onclick="moveSlide(1)">›</button>
+    </div>
+</section>
+
+<div class="category-links">
+    {% for category in categories %}
+        <a class="category-link" href="{% url 'category_products' category %}">{{ category }}</a>
+    {% endfor %}
+</div>
+
+<div class="summary">
+    <div class="stat"><strong>{{ counts.products }}</strong><br>Products</div>
+    <div class="stat"><strong>{{ counts.customers }}</strong><br>Customers</div>
+    <div class="stat"><strong>{{ counts.sales }}</strong><br>Sales</div>
+    <div class="stat"><strong>{{ counts.alerts }}</strong><br>Alerts</div>
+</div>
+
+<div class="container">
+    {% for product in products %}
+    <div class="card">
+        <h2>{{ product.name }}</h2>
+        <p><strong>Category:</strong> {{ product.category }}</p>
+        <p><strong>Price:</strong> {{ product.price }}</p>
+        <p><strong>Stock:</strong> {{ product.stock }}</p>
+        <p><strong>Added:</strong> {{ product.created_at|date:'Y-m-d H:i' }}</p>
+        <form method="get" action="{% url 'purchase_product' product.id %}">
+            <label style="display:block; margin-bottom:8px;">
+                Qty
+                <input type="number" name="quantity" min="1" max="{{ product.stock }}" value="1">
+            </label>
+            <button class="button-link" type="submit">Buy now</button>
+        </form>
+        <form method="post" action="{% url 'add_to_cart' product.id %}" style="margin-top: 10px;">
+            {% csrf_token %}
+            <input type="hidden" name="quantity" value="1">
+            <button class="button-link" type="submit">Add to cart</button>
+        </form>
+    </div>
+    {% empty %}
+    <div class="card">
+        <p>No products found.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    const track = document.getElementById('carouselTrack');
+    let slideIndex = 0;
+    function moveSlide(direction) {
+        const item = track.querySelector('.carousel-item');
+        if (!item) return;
+        const itemWidth = item.offsetWidth + 24;
+        const maxIndex = track.children.length - 1;
+        slideIndex = Math.min(Math.max(slideIndex + direction, 0), maxIndex);
+        track.style.transform = `translateX(${-slideIndex * itemWidth}px)`;
+    }
+</script>
+</body>
+</html>

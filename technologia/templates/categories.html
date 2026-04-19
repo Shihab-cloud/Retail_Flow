@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Categories - Technologia</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: white; margin: 0; }
+        header { background: #111827; padding: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        header h1 { margin: 0; font-size: 24px; }
+        nav { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        nav a { color: white; text-decoration: none; font-weight: 600; }
+        nav a:hover { color: #22c55e; }
+        .content { padding: 20px; }
+        .category-list { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        .category-card { background: #1e293b; padding: 20px; border-radius: 18px; }
+        .category-card a { color: white; text-decoration: none; font-size: 18px; font-weight: 600; }
+        .category-card a:hover { color: #22c55e; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Categories</h1>
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'cart' %}">Cart</a>
+        <a href="{% url 'customers' %}">Customers</a>
+        <a href="{% url 'sales' %}">Sales</a>
+        <a href="{% url 'alerts' %}">Alerts</a>
+        {% if customer %}
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'signup' %}">Signup</a>
+        {% endif %}
+    </nav>
+</header>
+<div class="content">
+    <p>Browse products by category. Each category page is paginated for easier discovery.</p>
+    <div class="category-list">
+        {% for category in categories %}
+        <div class="category-card">
+            <a href="{% url 'category_products' category %}">{{ category }}</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>

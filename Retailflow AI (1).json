@@ -1,0 +1,456 @@
+{
+  "name": "Retailflow AI",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        -1056
+      ],
+      "id": "a4e060cc-d314-4da1-8b4a-070e7bf4cb9a",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM products;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        144,
+        -1056
+      ],
+      "id": "777a1015-19f2-4208-8f55-09462f284533",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "mySql": {
+          "id": "SsV89pjDk5xqIYwa",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xIuUjbHY0zdF_ISMygNfcas0cvQHty6zND6-NRV3Om8",
+          "mode": "list",
+          "cachedResultName": "Retailflow AI",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xIuUjbHY0zdF_ISMygNfcas0cvQHty6zND6-NRV3Om8/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xIuUjbHY0zdF_ISMygNfcas0cvQHty6zND6-NRV3Om8/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "productid": "={{ $json.product_id }}",
+            "product_name": "={{ $json.product_name }}",
+            "Quantity": "={{ $json.quantity }}",
+            "category": "={{ $json.category }}",
+            "price": "={{ $json.price }}",
+            "image": "={{ $json.image_url }}",
+            "slug": "={{ $json.slug }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "productid",
+              "displayName": "productid",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Quantity",
+              "displayName": "Quantity",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "price",
+              "displayName": "price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "image",
+              "displayName": "image",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "slug",
+              "displayName": "slug",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        352,
+        -1056
+      ],
+      "id": "c1dfc16c-8c2f-47d8-aac7-a0f95b5d1400",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "EM60Y8vBukAOJ2It",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "22108cdc-b8ae-4084-860c-3943e2c67362",
+              "leftValue": "={{ $json.stock }}",
+              "rightValue": "={{ $json.threshold }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1392,
+        -624
+      ],
+      "id": "52948b6f-1d7d-4948-aa80-2bcc96003ccc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "buy-product",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        -528
+      ],
+      "id": "3d587300-b36e-4660-b726-8661b9007e46",
+      "name": "Webhook",
+      "webhookId": "c163c092-9dd5-4219-8cf1-c531db6ea4ae"
+    },
+    {
+      "parameters": {
+        "content": "## Inventory management ,restock alert, sales data collection agent\n",
+        "height": 400,
+        "width": 2176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        -672
+      ],
+      "typeVersion": 1,
+      "id": "6c6a6691-7add-46f8-a2b5-b770f39a6da4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE products\nset stock=stock-{{ $json.body.quantity }}\nwhere id ={{ $json.body.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        560,
+        -624
+      ],
+      "id": "b02f1a71-dd5e-4102-9a98-a540faa3534e",
+      "name": "updating inventory",
+      "credentials": {
+        "mySql": {
+          "id": "SsV89pjDk5xqIYwa",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7d0daa87-7dd9-4677-aa8a-964dcca5c084",
+              "name": "body.quantity",
+              "value": "={{ $json.body.quantity }}",
+              "type": "number"
+            },
+            {
+              "id": "1de80456-96bd-432c-ac6b-691901663f87",
+              "name": "body.id",
+              "value": "={{ $json.body.id }}",
+              "type": "number"
+            },
+            {
+              "id": "265226d5-5999-4945-8077-599f179c969f",
+              "name": "body.customer_id",
+              "value": "={{ $json.body.customer_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        320,
+        -528
+      ],
+      "id": "f30622ac-df21-48fd-b20f-a44c827cfef7",
+      "name": "mapping"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "insert into sales (quantity,product_id,customer_id,timestamp)\nVALUES({{ $json.body.quantity }},{{ $json.body.id }},{{ $json.body.customer_id }},now())",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        560,
+        -480
+      ],
+      "id": "5a20d14e-b6c7-4ea8-9a48-61b592041bc0",
+      "name": "sales update",
+      "credentials": {
+        "mySql": {
+          "id": "SsV89pjDk5xqIYwa",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "select stock ,threshold FROM products\nwhere id={{ $('mapping').item.json.body.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1184,
+        -624
+      ],
+      "id": "84e70565-9e1f-43ab-aa06-882ec6f65b42",
+      "name": "product_quantity",
+      "credentials": {
+        "mySql": {
+          "id": "SsV89pjDk5xqIYwa",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "rezwan.ahmed1@northsouth.edu",
+        "subject": "Low Inventory Alert – Immediate Attention Required",
+        "emailType": "text",
+        "message": "=Dear Owner,  This is an automated notification to inform you that one or more products in your inventory have reached a low stock level.  **Product Details:**  * Product_id={{ $('mapping').item.json.body.id }} * Remaining Stock: {{ $('product_quantity').item.json.stock }} The current stock is below the defined threshold and may soon run out. It is recommended to initiate a restocking process as soon as possible to avoid disruption in sales.  Please review your inventory and take the necessary action.  Best regards, Technologia Inventory System",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1760,
+        -544
+      ],
+      "id": "89b01340-7966-4bf2-a0f6-2be1c520972a",
+      "name": "Restock alert mail",
+      "webhookId": "29f906c3-85bd-45e3-b2fb-a5d5ff5ff14f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "J2qlINcCVJU0aN5K",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "mapping": [
+      {
+        "json": {
+          "body": {
+            "quantity": 1,
+            "id": 3,
+            "customer_id": 11
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Restock alert mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mapping": {
+      "main": [
+        [
+          {
+            "node": "updating inventory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "sales update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sales update": {
+      "main": [
+        []
+      ]
+    },
+    "product_quantity": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "updating inventory": {
+      "main": [
+        [
+          {
+            "node": "product_quantity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "268694ea-a001-4136-93b9-5c9257c3534a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "60e4cf0c524b4e85898a90df4492ec2d711c32b6f36af7724e1538ff6ad6a8fc"
+  },
+  "id": "frqJuyzgOPgvzAWZ",
+  "tags": []
+}

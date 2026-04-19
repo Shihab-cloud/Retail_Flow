@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ category_name }} - Technologia</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: white; margin: 0; }
+        header { background: #111827; padding: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        header h1 { margin: 0; font-size: 24px; }
+        nav { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        nav a { color: white; text-decoration: none; font-weight: 600; }
+        nav a:hover { color: #22c55e; }
+        .content { padding: 20px; }
+        .category-breadcrumb { margin-bottom: 18px; color: #cbd5e1; }
+        .product-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+        .card { background: #1e293b; padding: 20px; border-radius: 15px; }
+        .button-link { display: inline-block; margin-top: 12px; padding: 10px 20px; background: #22c55e; border-radius: 10px; color: white; text-decoration: none; font-weight: bold; border: none; cursor: pointer; }
+        .button-link:hover { background: #16a34a; }
+        input[type="number"] { width: 72px; margin-left: 8px; padding: 6px 8px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #fff; }
+        .pagination { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+        .page-link { background: #111827; padding: 10px 14px; border-radius: 12px; color: white; text-decoration: none; }
+        .page-link.active { background: #22c55e; }
+    </style>
+</head>
+<body>
+<header>
+    <h1>{{ category_name }}</h1>
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+        <a href="{% url 'categories' %}">Categories</a>
+        <a href="{% url 'cart' %}">Cart</a>
+        <a href="{% url 'customers' %}">Customers</a>
+        <a href="{% url 'sales' %}">Sales</a>
+        <a href="{% url 'alerts' %}">Alerts</a>
+        {% if customer %}
+            <a href="{% url 'logout' %}">Logout</a>
+        {% else %}
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'signup' %}">Signup</a>
+        {% endif %}
+    </nav>
+</header>
+<div class="content">
+    <p class="category-breadcrumb">Showing products for category: <strong>{{ category_name }}</strong>. Use the links below to browse other categories.</p>
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="card">
+            <h2>{{ product.name }}</h2>
+            <p><strong>Price:</strong> {{ product.price }}</p>
+            <p><strong>Stock:</strong> {{ product.stock }}</p>
+            <p><strong>Added:</strong> {{ product.created_at|date:'Y-m-d H:i' }}</p>
+            <form method="get" action="{% url 'purchase_product' product.id %}">
+                <label>
+                    Qty
+                    <input type="number" name="quantity" min="1" max="{{ product.stock }}" value="1">
+                </label>
+                <button class="button-link" type="submit">Buy now</button>
+            </form>
+            <form method="post" action="{% url 'add_to_cart' product.id %}" style="margin-top: 10px;">
+                {% csrf_token %}
+                <input type="hidden" name="quantity" value="1">
+                <button class="button-link" type="submit">Add to cart</button>
+            </form>
+        </div>
+        {% empty %}
+        <div class="card">
+            <p>No products in this category yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+    <div class="pagination">
+        {% if products.has_previous %}
+            <a class="page-link" href="?page={{ products.previous_page_number }}">Previous</a>
+        {% endif %}
+        {% for num in products.paginator.page_range %}
+            <a class="page-link {% if num == products.number %}active{% endif %}" href="?page={{ num }}">{{ num }}</a>
+        {% endfor %}
+        {% if products.has_next %}
+            <a class="page-link" href="?page={{ products.next_page_number }}">Next</a>
+        {% endif %}
+    </div>
+</div>
+</body>
+</html>
