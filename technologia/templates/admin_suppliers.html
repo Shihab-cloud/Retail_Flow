@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RetailFlow Admin - Suppliers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-900 text-gray-100 flex h-screen overflow-hidden font-sans">
+
+    <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-700">
+            <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-robot mr-2"></i>RetailFlow <span
+                    class="text-white">Admin</span></h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2">
+            <a href="{% url 'admin_dashboard' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-tachometer-alt w-6"></i> Dashboard</a>
+            <a href="{% url 'admin_inventory' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-boxes w-6"></i> Inventory & AI</a>
+            <a href="{% url 'admin_suppliers' %}" class="block px-4 py-2 bg-blue-600 text-white rounded transition"><i
+                    class="fas fa-truck w-6"></i> Suppliers</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-file-invoice-dollar w-6"></i> Accounting & OCR</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-chart-line w-6"></i> Reports</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-cog w-6"></i> Settings</a>
+        </nav>
+        <div class="p-4 border-t border-gray-700">
+            <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-white"><i
+                    class="fas fa-external-link-alt mr-1"></i> View Storefront</a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-8">
+            <h2 class="text-xl font-semibold">Supplier & Procurement Management</h2>
+            <button
+                class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition shadow flex items-center">
+                <i class="fas fa-plus mr-2"></i> Add New Vendor
+            </button>
+        </header>
+
+        <div class="p-8 space-y-8">
+
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center bg-gray-750">
+                    <h3 class="font-semibold text-lg"><i class="fas fa-file-contract text-blue-400 mr-2"></i> Active
+                        Purchase Orders</h3>
+                    <span class="bg-blue-900 text-blue-300 text-xs px-2 py-1 rounded border border-blue-700">AI
+                        Managed</span>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-400 mb-4 text-sm">These orders were automatically drafted by the RetailFlow n8n
+                        Agent based on inventory thresholds.</p>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-400 text-sm border-b border-gray-600">
+                                <th class="pb-2">PO Number</th>
+                                <th class="pb-2">Supplier</th>
+                                <th class="pb-2">Items</th>
+                                <th class="pb-2">Status</th>
+                                <th class="pb-2 text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700 text-sm">
+                            <tr class="hover:bg-gray-750 transition">
+                                <td class="py-3 font-mono text-blue-400">PO-2026-089</td>
+                                <td class="py-3">TechDistributors Inc.</td>
+                                <td class="py-3">12x Keyboards, 5x Mice</td>
+                                <td class="py-3"><span class="text-yellow-400"><i class="fas fa-clock mr-1"></i>
+                                        Awaiting Approval</span></td>
+                                <td class="py-3 text-right">
+                                    <button class="text-green-400 hover:text-green-300 mr-3"><i
+                                            class="fas fa-check"></i> Approve & Send</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="font-semibold text-lg">Vendor Directory</h3>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div class="border border-gray-700 rounded p-4 bg-gray-750">
+                            <h4 class="font-bold text-lg mb-1">TechDistributors Inc.</h4>
+                            <p class="text-sm text-gray-400 mb-3"><i class="fas fa-envelope mr-1"></i>
+                                orders@techdist.com</p>
+                            <div class="text-xs text-gray-500">
+                                <p>Reliability Score: <span class="text-green-400 font-bold">98%</span></p>
+                                <p>Avg Delivery: 2 Days</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+
+</html>

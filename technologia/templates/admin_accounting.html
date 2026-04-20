@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RetailFlow Admin - Accounting & OCR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-900 text-gray-100 flex h-screen overflow-hidden font-sans">
+
+    <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-700">
+            <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-robot mr-2"></i>RetailFlow <span
+                    class="text-white">Admin</span></h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2">
+            <a href="{% url 'admin_dashboard' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-tachometer-alt w-6"></i> Dashboard</a>
+            <a href="{% url 'admin_inventory' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-boxes w-6"></i> Inventory & AI</a>
+            <a href="{% url 'admin_suppliers' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-truck w-6"></i> Suppliers</a>
+            <a href="{% url 'admin_accounting' %}" class="block px-4 py-2 bg-blue-600 text-white rounded transition"><i
+                    class="fas fa-file-invoice-dollar w-6"></i> Accounting & OCR</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-chart-line w-6"></i> Reports</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-cog w-6"></i> Settings</a>
+        </nav>
+        <div class="p-4 border-t border-gray-700">
+            <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-white"><i
+                    class="fas fa-external-link-alt mr-1"></i> View Storefront</a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center px-8">
+            <h2 class="text-xl font-semibold">AI Accounting & Invoice Processing</h2>
+        </header>
+
+        <div class="p-8 space-y-8">
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+                <div class="lg:col-span-2 bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6">
+                    <h3 class="font-semibold text-lg mb-4"><i class="fas fa-cloud-upload-alt text-blue-400 mr-2"></i>
+                        Upload Supplier Invoice</h3>
+                    <p class="text-sm text-gray-400 mb-4">Upload a PDF or image of an invoice. The n8n OCR Agent will
+                        extract line items, validate pricing, and update the ledger.</p>
+
+                    <form method="POST" enctype="multipart/form-data"
+                        class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer bg-gray-750">
+                        {% csrf_token %}
+                        <i class="fas fa-file-invoice text-4xl text-gray-500 mb-3"></i>
+                        <p class="text-gray-300 font-medium">Drag and drop invoice file here</p>
+                        <p class="text-xs text-gray-500 mt-1">Supports PDF, JPG, PNG</p>
+                        <input type="file" class="hidden" name="invoice_file" id="invoice_file">
+                        <button type="button"
+                            class="mt-4 bg-gray-700 hover:bg-gray-600 text-white text-sm px-4 py-2 rounded border border-gray-600 transition"
+                            onclick="document.getElementById('invoice_file').click();">
+                            Browse Files
+                        </button>
+                    </form>
+                </div>
+
+                <div class="bg-gray-800 rounded-lg border border-red-900 shadow-lg overflow-hidden">
+                    <div
+                        class="px-6 py-4 border-b border-red-900 bg-red-900 bg-opacity-20 flex justify-between items-center">
+                        <h3 class="font-semibold text-red-400"><i class="fas fa-shield-alt mr-2"></i> Fraud Detection
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-750 border-l-4 border-red-500 p-4 rounded mb-3">
+                            <p class="text-sm font-bold text-gray-200">Price Anomaly Detected</p>
+                            <p class="text-xs text-gray-400 mt-1">Invoice #INV-992 from Supplier X lists unit price 40%
+                                higher than historical average.</p>
+                            <button class="mt-2 text-xs text-red-400 hover:text-red-300 font-semibold">Review Flagged
+                                Invoice &rarr;</button>
+                        </div>
+                        <div class="bg-gray-750 border-l-4 border-green-500 p-4 rounded">
+                            <p class="text-sm font-bold text-gray-200">Ledger Reconciled</p>
+                            <p class="text-xs text-gray-400 mt-1">Last 50 transactions match bank records.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="font-semibold text-lg">Recent Ledger Entries</h3>
+                    <span
+                        class="text-xs text-green-400 bg-green-900 bg-opacity-30 px-2 py-1 rounded border border-green-800"><i
+                            class="fas fa-check-circle mr-1"></i> AI Verified</span>
+                </div>
+                <div class="p-6">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-gray-400 text-sm border-b border-gray-600">
+                                <th class="pb-2">Date</th>
+                                <th class="pb-2">Ref Number</th>
+                                <th class="pb-2">Description</th>
+                                <th class="pb-2 text-right">Amount</th>
+                                <th class="pb-2 text-center">AI Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700 text-sm">
+                            <tr class="hover:bg-gray-750 transition">
+                                <td class="py-3 text-gray-300">Oct 24, 2026</td>
+                                <td class="py-3 font-mono text-gray-400">INV-8472</td>
+                                <td class="py-3">Inventory Restock - TechDistributors</td>
+                                <td class="py-3 text-right text-red-400">-$1,240.00</td>
+                                <td class="py-3 text-center"><span
+                                        class="text-green-400 text-xs border border-green-700 px-2 py-1 rounded">Extracted
+                                        & Logged</span></td>
+                            </tr>
+                            <tr class="hover:bg-gray-750 transition">
+                                <td class="py-3 text-gray-300">Oct 24, 2026</td>
+                                <td class="py-3 font-mono text-gray-400">POS-001</td>
+                                <td class="py-3">Daily POS Sales Batch</td>
+                                <td class="py-3 text-right text-green-400">+$850.50</td>
+                                <td class="py-3 text-center"><span
+                                        class="text-green-400 text-xs border border-green-700 px-2 py-1 rounded">Reconciled</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+</body>
+
+</html>

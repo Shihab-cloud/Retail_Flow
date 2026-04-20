@@ -7,7 +7,7 @@ from django.db.models.functions import Coalesce
 from .models import Product, Customer, Sale, Alert
 import requests
 
-N8N_WEBHOOK_URL = 'http://localhost:5678/webhook/buy-product'
+N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/buy-product'
 
 
 def get_logged_in_customer(request):
@@ -306,8 +306,13 @@ def purchase_product(request, product_id):
     })
 
 
+from django.http import JsonResponse
+
 def checkout(request):
-    return redirect('purchase_cart')
+    if request.method == 'POST':
+        return JsonResponse({'status': 'success', 'message': 'Checkout completed successfully!'})
+    products = Product.objects.all()
+    return render(request, 'checkout.html', {'products': products})
 
 
 def signup(request):
@@ -388,3 +393,65 @@ def logout(request):
 
 def buy_product(request, product_id):
     return redirect('purchase_product', product_id=product_id)
+
+def admin_dashboard(request):
+    # Gather high-level stats for the top cards
+    counts = {
+        'products': Product.objects.count(),
+        'customers': Customer.objects.count(),
+        'sales': Sale.objects.count(),
+        'alerts': Alert.objects.count(),
+    }
+    
+    # Grab the 5 most recent alerts to show on the dashboard
+    # (Assuming your Alert model has a standard 'id' or timestamp)
+    recent_alerts = Alert.objects.select_related('product').all().order_by('-id')[:5]
+
+    return render(request, 'admin_dashboard.html', {
+        'counts': counts,
+        'recent_alerts': recent_alerts
+    })
+
+def admin_inventory(request):
+    # Fetch all products, prioritizing items with the lowest stock
+    products = Product.objects.all().order_by('stock')
+    
+    return render(request, 'admin_inventory.html', {
+        'products': products
+    })
+
+def admin_suppliers(request):
+    # Note: Once you create a Supplier database model, you will query it here
+    # suppliers = Supplier.objects.all()
+    # return render(request, 'admin_suppliers.html', {'suppliers': suppliers})
+    
+    return render(request, 'admin_suppliers.html')
+
+def admin_accounting(request):
+    if request.method == 'POST':
+        # This is where we will eventually catch the uploaded invoice file
+        # and forward it to your n8n OCR webhook for data extraction.
+        # For now, it just passes.
+        pass
+        
+    return render(request, 'admin_accounting.html')
+
+def admin_reports(request):
+    # Calculate some quick native stats for the top cards
+    total_revenue = Sale.objects.aggregate(
+        total=Sum('product__price', default=0)
+    )['total']
+    
+    total_sales_count = Sale.objects.count()
+    
+    return render(request, 'admin_reports.html', {
+        'total_revenue': total_revenue,
+        'total_sales_count': total_sales_count
+    })
+
+def admin_settings(request):
+    if request.method == 'POST':
+        # Handle saving settings (like WhatsApp numbers or n8n URLs) here later
+        pass
+        
+    return render(request, 'admin_settings.html')

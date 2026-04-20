@@ -19,4 +19,10 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('logout/', views.logout, name='logout'),
     path('buy/<int:product_id>/', views.buy_product, name='buy_product'),
+    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('admin-inventory/', views.admin_inventory, name='admin_inventory'),
+    path('admin-suppliers/', views.admin_suppliers, name='admin_suppliers'),
+    path('admin-accounting/', views.admin_accounting, name='admin_accounting'),
+    path('admin-reports/', views.admin_reports, name='admin_reports'),
+    path('admin-settings/', views.admin_settings, name='admin_settings'),
 ]

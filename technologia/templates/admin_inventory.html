@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RetailFlow Admin - Inventory & AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-900 text-gray-100 flex h-screen overflow-hidden font-sans">
+
+    <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-700">
+            <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-robot mr-2"></i>RetailFlow <span
+                    class="text-white">Admin</span></h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2">
+            <a href="{% url 'admin_dashboard' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-tachometer-alt w-6"></i> Dashboard</a>
+            <a href="{% url 'admin_inventory' %}" class="block px-4 py-2 bg-blue-600 text-white rounded transition"><i
+                    class="fas fa-boxes w-6"></i> Inventory & AI</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-truck w-6"></i> Suppliers</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-file-invoice-dollar w-6"></i> Accounting & OCR</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-chart-line w-6"></i> Reports</a>
+            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-cog w-6"></i> Settings</a>
+        </nav>
+        <div class="p-4 border-t border-gray-700">
+            <a href="{% url 'home' %}" class="text-sm text-gray-400 hover:text-white"><i
+                    class="fas fa-external-link-alt mr-1"></i> View Storefront</a>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-8">
+            <h2 class="text-xl font-semibold">Inventory & AI Forecasting</h2>
+            <button
+                class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded transition shadow flex items-center">
+                <i class="fas fa-sync-alt mr-2"></i> Sync with n8n
+            </button>
+        </header>
+
+        <div class="p-8">
+            <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-700 text-gray-300 text-sm uppercase tracking-wide border-b border-gray-600">
+                            <th class="p-4 font-semibold">Product Name</th>
+                            <th class="p-4 font-semibold">Category</th>
+                            <th class="p-4 font-semibold">Current Stock</th>
+                            <th class="p-4 font-semibold">Price</th>
+                            <th class="p-4 font-semibold text-center">AI Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-700">
+                        {% for product in products %}
+                        <tr class="hover:bg-gray-750 transition">
+                            <td class="p-4 font-medium">{{ product.name }}</td>
+                            <td class="p-4 text-gray-400">{{ product.category }}</td>
+                            <td class="p-4">
+                                {% if product.stock < 20 %} <span class="text-red-400 font-bold"><i
+                                        class="fas fa-exclamation-triangle mr-1"></i> {{ product.stock }}</span>
+                                    {% else %}
+                                    <span class="text-green-400">{{ product.stock }}</span>
+                                    {% endif %}
+                            </td>
+                            <td class="p-4">${{ product.price }}</td>
+                            <td class="p-4 text-center">
+                                {% if product.stock < 20 %} <button
+                                    class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded transition">
+                                    Run Reorder Agent
+                                    </button>
+                                    {% else %}
+                                    <span class="text-gray-500 text-sm">Stock Optimal</span>
+                                    {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="p-8 text-center text-gray-500">No products found in the database.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>
