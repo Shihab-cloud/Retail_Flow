@@ -1,11 +1,17 @@
+import json
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password, check_password
-from django.db.models import Sum, Value
+from django.db.models import F, Sum, Value
 from django.db.models.functions import Coalesce
-from .models import Product, Customer, Sale, Alert
+from .models import Product, Customer, Sale, Alert, Invoice, Supplier
 import requests
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+import datetime
+from django.contrib import messages
 
 N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/buy-product'
 
@@ -395,22 +401,29 @@ def buy_product(request, product_id):
     return redirect('purchase_product', product_id=product_id)
 
 def admin_dashboard(request):
-    # Gather high-level stats for the top cards
-    counts = {
-        'products': Product.objects.count(),
-        'customers': Customer.objects.count(),
-        'sales': Sale.objects.count(),
-        'alerts': Alert.objects.count(),
-    }
-    
-    # Grab the 5 most recent alerts to show on the dashboard
-    # (Assuming your Alert model has a standard 'id' or timestamp)
-    recent_alerts = Alert.objects.select_related('product').all().order_by('-id')[:5]
+    # --- 1. Check n8n Status ---
+    n8n_is_active = False
+    try:
+        # Ping the default n8n health check endpoint (assuming it runs on port 5678)
+        response = requests.get('http://localhost:5678/healthz', timeout=1)
+        if response.status_code == 200:
+            n8n_is_active = True
+    except (requests.ConnectionError, requests.Timeout):
+        n8n_is_active = False
 
-    return render(request, 'admin_dashboard.html', {
-        'counts': counts,
-        'recent_alerts': recent_alerts
-    })
+    # --- 2. Fetch Dashboard Data ---
+    active_alerts = Alert.objects.all()
+    alert_count = active_alerts.count()
+
+    context = {
+        'n8n_is_active': n8n_is_active,
+        'active_alerts': active_alerts,
+        'alert_count': alert_count,
+        'product_count': Product.objects.count(),
+        'customer_count': Customer.objects.count(),
+        'sales_count': Sale.objects.count(),
+    }
+    return render(request, 'admin_dashboard.html', context)
 
 def admin_inventory(request):
     # Fetch all products, prioritizing items with the lowest stock
@@ -421,33 +434,87 @@ def admin_inventory(request):
     })
 
 def admin_suppliers(request):
-    # Note: Once you create a Supplier database model, you will query it here
-    # suppliers = Supplier.objects.all()
-    # return render(request, 'admin_suppliers.html', {'suppliers': suppliers})
+    # Handle the "Add New Vendor" form submission
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        email = request.POST.get('email')
+        
+        # Save to the new database table
+        Supplier.objects.create(
+            name=name,
+            email=email,
+            reliability_score=99, # Defaulting to 99% for new vendors
+            avg_delivery_days=2   # Defaulting to 2 days
+        )
+        return redirect('admin_suppliers')
+
+    # Fetch all suppliers to display in the Vendor Directory
+    suppliers = Supplier.objects.all()
     
-    return render(request, 'admin_suppliers.html')
+    return render(request, 'admin_suppliers.html', {'suppliers': suppliers})
 
 def admin_accounting(request):
-    if request.method == 'POST':
-        # This is where we will eventually catch the uploaded invoice file
-        # and forward it to your n8n OCR webhook for data extraction.
-        # For now, it just passes.
-        pass
+    # --- 1. HANDLE THE FILE UPLOAD (AI OCR Agent) ---
+    if request.method == 'POST' and request.FILES.get('invoice_file'):
+        uploaded_file = request.FILES['invoice_file']
+        n8n_url = 'http://localhost:5678/webhook-test/invoice-ocr'
+        files = {'invoice': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
         
-    return render(request, 'admin_accounting.html')
+        try:
+            requests.post(n8n_url, files=files)
+        except Exception as e:
+            print(f"Error sending to n8n: {e}")
+
+    # --- 2. FETCH DASHBOARD DATA ---
+    # The 'or 0.00' ensures the page doesn't crash if the tables are completely empty
+
+    total_expenses = Invoice.objects.aggregate(Sum('amount'))['amount__sum'] or 0.00
+    total_sales = Sale.objects.aggregate(
+        total=Sum(F('product__price') * F('quantity'))
+    )['total'] or 0.00
+    
+    # Calculate net profit
+    net_profit = float(total_sales) - float(total_expenses)
+
+    # Grab the 5 most recent invoices to display in your table
+    recent_invoices = Invoice.objects.order_by('-date')[:5]
+
+    # --- 3. SEND DATA TO HTML ---
+    context = {
+        'total_expenses': total_expenses,
+        'total_sales': total_sales,
+        'net_profit': net_profit,
+        'recent_invoices': recent_invoices,
+    }
+
+    return render(request, 'admin_accounting.html', context)
 
 def admin_reports(request):
-    # Calculate some quick native stats for the top cards
-    total_revenue = Sale.objects.aggregate(
-        total=Sum('product__price', default=0)
-    )['total']
-    
+    # 1. Top Cards Data (Live from DB)
+    total_revenue = Sale.objects.aggregate(total=Sum('product__price', default=0))['total']
     total_sales_count = Sale.objects.count()
-    
-    return render(request, 'admin_reports.html', {
+    stockouts_prevented = Alert.objects.count() 
+
+    # 2. Demand Forecasting Line Chart (Presentation Data)
+    chart_labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    chart_data = [12, 19, 15, 25, 22, 30, 28] # Realistic upward trend for the demo
+
+    # 3. Expense & Fraud Pie Chart (Live from DB)
+    pie_labels = ["Normal Sales", "Anomalies/Alerts"]
+    pie_data = [total_sales_count, stockouts_prevented]
+
+    context = {
         'total_revenue': total_revenue,
-        'total_sales_count': total_sales_count
-    })
+        'total_sales_count': total_sales_count,
+        'stockouts_prevented': stockouts_prevented,
+        # json.dumps() converts Python lists into JavaScript arrays
+        'chart_labels': json.dumps(chart_labels),
+        'chart_data': json.dumps(chart_data),
+        'pie_labels': json.dumps(pie_labels),
+        'pie_data': json.dumps(pie_data),
+    }
+    
+    return render(request, 'admin_reports.html', context)
 
 def admin_settings(request):
     if request.method == 'POST':
@@ -455,3 +522,123 @@ def admin_settings(request):
         pass
         
     return render(request, 'admin_settings.html')
+
+def export_monthly_report(request):
+    # 1. Setup the HTTP response to tell the browser to download a CSV file
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="RetailFlow_AI_Monthly_Report.csv"'
+
+    writer = csv.writer(response)
+
+    # 2. Write the Executive Summary Header & Stats
+    writer.writerow(['RETAILFLOW AI - EXECUTIVE SUMMARY'])
+    writer.writerow(['-----------------------------------'])
+    
+    total_revenue = Sale.objects.aggregate(total=Sum('product__price', default=0))['total']
+    total_sales_count = Sale.objects.count()
+    stockouts_prevented = Alert.objects.count()
+
+    writer.writerow(['Total Revenue ($)', total_revenue if total_revenue else 0.00])
+    writer.writerow(['Total Transactions', total_sales_count])
+    writer.writerow(['Stockouts Prevented', stockouts_prevented])
+    
+    writer.writerow([]) # Add a blank line for spacing
+    writer.writerow([])
+
+    # 3. Write the AI Alerts Log
+    writer.writerow(['AI SYSTEM ALERTS & ACTIONS'])
+    writer.writerow(['-----------------------------------'])
+    writer.writerow(['Timestamp', 'Product ID', 'AI Message'])
+
+    # Fetch all alerts, newest first
+    alerts = Alert.objects.all().order_by('-created_at')
+    for alert in alerts:
+        # Format the timestamp to be easily readable in Excel
+        formatted_date = alert.created_at.strftime("%Y-%m-%d %H:%M") if alert.created_at else "N/A"
+        writer.writerow([formatted_date, alert.product_id, alert.message])
+
+    return response
+
+def export_monthly_report(request):
+    # 1. Fetch live data
+    total_revenue = Sale.objects.aggregate(total=Sum('product__price', default=0))['total']
+    total_sales_count = Sale.objects.count()
+    stockouts_prevented = Alert.objects.count()
+    alerts = Alert.objects.all().order_by('-created_at')
+
+    # 2. Prepare the context for the PDF template
+    context = {
+        'total_revenue': total_revenue if total_revenue else 0.00,
+        'total_sales_count': total_sales_count,
+        'stockouts_prevented': stockouts_prevented,
+        'alerts': alerts,
+        'current_date': datetime.datetime.now().strftime("%B %Y")
+    }
+
+    # 3. Render the HTML template
+    template = get_template('report_pdf.html')
+    html = template.render(context)
+
+    # 4. Create the PDF response
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="RetailFlow_Monthly_Report.pdf"'
+
+    # 5. Convert HTML to PDF
+    pisa_status = pisa.CreatePDF(html, dest=response)
+    
+    if pisa_status.err:
+        return HttpResponse('We had some errors generating the PDF')
+    return response
+
+def resolve_alert(request, alert_id):
+    try:
+        alert = Alert.objects.get(id=alert_id)
+        alert.delete() # Removes the alert from the database
+    except Alert.DoesNotExist:
+        pass
+    
+    # Refresh the dashboard instantly
+    return redirect('admin_dashboard')
+
+def run_reorder_agent(request, product_id):
+    """Triggers the n8n reorder agent for a specific product"""
+    product = get_object_or_404(Product, id=product_id)
+    
+    # YOUR EXACT PRODUCTION URL:
+    n8n_webhook_url = 'http://localhost:5678/webhook/buy-product'
+    
+    # The Payload: This is the data Django sends to n8n so the AI knows what to buy!
+    payload = {
+        'product_id': product.id,
+        'product_name': product.name,
+        # Change 'stock' to whatever your actual database field is named (e.g., 'quantity')
+        'current_stock': product.stock, 
+        'price': str(product.price)
+    }
+
+    try:
+        # We use POST because we are sending data (the payload)
+        response = requests.post(n8n_webhook_url, json=payload, timeout=3)
+        if response.status_code == 200:
+            messages.success(request, f"Success: AI Reorder Agent deployed for {product.name}!")
+        else:
+            messages.warning(request, "n8n received the request but returned an error.")
+    except requests.exceptions.RequestException:
+        messages.error(request, "Connection Error: Could not reach n8n. Is the workflow Active?")
+
+    return redirect('admin_inventory') # Redirects back to the same page
+
+
+def sync_n8n(request):
+    """Triggers the global n8n inventory sync"""
+    # For your Global Sync button, you will eventually want a separate workflow/URL.
+    # For now, we will use a placeholder so the button works without crashing.
+    n8n_webhook_url = 'http://localhost:5678/webhook/sync-inventory' 
+    
+    try:
+        response = requests.get(n8n_webhook_url, timeout=2)
+        messages.success(request, "Global Inventory Sync triggered!")
+    except requests.exceptions.RequestException:
+        messages.error(request, "Connection Error: Sync webhook not found yet.")
+
+    return redirect('admin_inventory')

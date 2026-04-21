@@ -24,9 +24,11 @@
                     class="fas fa-boxes w-6"></i> Inventory & AI</a>
             <a href="{% url 'admin_suppliers' %}" class="block px-4 py-2 bg-blue-600 text-white rounded transition"><i
                     class="fas fa-truck w-6"></i> Suppliers</a>
-            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+            <a href="{% url 'admin_accounting' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-file-invoice-dollar w-6"></i> Accounting & OCR</a>
-            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+            <a href="{% url 'admin_reports' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-chart-line w-6"></i> Reports</a>
             <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-cog w-6"></i> Settings</a>
@@ -40,13 +42,38 @@
     <main class="flex-1 flex flex-col overflow-y-auto">
         <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-8">
             <h2 class="text-xl font-semibold">Supplier & Procurement Management</h2>
-            <button
+            <button id="toggle-vendor-form"
                 class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded transition shadow flex items-center">
                 <i class="fas fa-plus mr-2"></i> Add New Vendor
             </button>
         </header>
 
         <div class="p-8 space-y-8">
+
+            <!-- Add New Vendor Form (hidden by default) -->
+            <div id="add-vendor-form" class="hidden">
+                <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 w-1/2">
+                    <h3 class="font-semibold text-lg mb-4"><i class="fas fa-plus text-blue-400 mr-2"></i> Add New Vendor
+                    </h3>
+                    <form method="POST" action="{% url 'admin_suppliers' %}">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="text-gray-300 text-sm">Vendor Name</label>
+                            <input type="text" name="name" required
+                                class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white mt-1">
+                        </div>
+                        <div class="mb-4">
+                            <label class="text-gray-300 text-sm">Email Address</label>
+                            <input type="email" name="email" required
+                                class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white mt-1">
+                        </div>
+                        <button type="submit"
+                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
+                            Save Vendor
+                        </button>
+                    </form>
+                </div>
+            </div>
 
             <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center bg-gray-750">
@@ -91,21 +118,32 @@
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for supplier in suppliers %}
                         <div class="border border-gray-700 rounded p-4 bg-gray-750">
-                            <h4 class="font-bold text-lg mb-1">TechDistributors Inc.</h4>
+                            <h4 class="font-bold text-lg mb-1">{{ supplier.name }}</h4>
                             <p class="text-sm text-gray-400 mb-3"><i class="fas fa-envelope mr-1"></i>
-                                orders@techdist.com</p>
+                                {{ supplier.email }}</p>
                             <div class="text-xs text-gray-500">
-                                <p>Reliability Score: <span class="text-green-400 font-bold">98%</span></p>
-                                <p>Avg Delivery: 2 Days</p>
+                                <p>Reliability Score: <span class="text-green-400 font-bold">{{
+                                        supplier.reliability_score }}%</span></p>
+                                <p>Avg Delivery: {{ supplier.avg_delivery_days }} Days</p>
                             </div>
                         </div>
+                        {% empty %}
+                        <p class="text-gray-400">No vendors added yet.</p>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
 
         </div>
     </main>
+
+    <script>
+        document.getElementById('toggle-vendor-form').addEventListener('click', function () {
+            document.getElementById('add-vendor-form').classList.toggle('hidden');
+        });
+    </script>
 
 </body>
 

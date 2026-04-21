@@ -21,11 +21,14 @@
                     class="fas fa-tachometer-alt w-6"></i> Dashboard</a>
             <a href="{% url 'admin_inventory' %}" class="block px-4 py-2 bg-blue-600 text-white rounded transition"><i
                     class="fas fa-boxes w-6"></i> Inventory & AI</a>
-            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+            <a href="{% url 'admin_suppliers' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-truck w-6"></i> Suppliers</a>
-            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+            <a href="{% url 'admin_accounting' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-file-invoice-dollar w-6"></i> Accounting & OCR</a>
-            <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+            <a href="{% url 'admin_reports' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-chart-line w-6"></i> Reports</a>
             <a href="#" class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-cog w-6"></i> Settings</a>
@@ -39,13 +42,26 @@
     <main class="flex-1 flex flex-col overflow-y-auto">
         <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-8">
             <h2 class="text-xl font-semibold">Inventory & AI Forecasting</h2>
-            <button
-                class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded transition shadow flex items-center">
-                <i class="fas fa-sync-alt mr-2"></i> Sync with n8n
-            </button>
+            <a href="{% url 'sync_n8n' %}"
+                class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i> Sync with n8n
+            </a>
         </header>
 
         <div class="p-8">
+            {% if messages %}
+            <div class="mb-4 space-y-2">
+                {% for message in messages %}
+                <div class="p-4 rounded-lg text-white font-bold 
+                            {% if message.tags == 'success' %}bg-green-600
+                            {% elif message.tags == 'warning' %}bg-yellow-500
+                            {% elif message.tags == 'error' %}bg-red-600
+                            {% else %}bg-blue-500{% endif %}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
             <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
                 <table class="w-full text-left border-collapse">
                     <thead>
@@ -71,10 +87,10 @@
                             </td>
                             <td class="p-4">${{ product.price }}</td>
                             <td class="p-4 text-center">
-                                {% if product.stock < 20 %} <button
-                                    class="bg-blue-600 hover:bg-blue-500 text-white text-xs px-3 py-1 rounded transition">
+                                {% if product.stock < 20 %} <a href="{% url 'run_reorder_agent' product.id %}"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1 px-3 rounded inline-block text-center">
                                     Run Reorder Agent
-                                    </button>
+                                    </a>
                                     {% else %}
                                     <span class="text-gray-500 text-sm">Stock Optimal</span>
                                     {% endif %}

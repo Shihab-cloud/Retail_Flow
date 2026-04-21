@@ -57,3 +57,25 @@ class Alert(models.Model):
 
     def __str__(self):
         return f"Alert for {self.product.name}"
+
+class Invoice(models.Model):
+    supplier_name = models.CharField(max_length=255)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    date = models.DateField()
+
+    class Meta:
+        # This tells Django to name the table exactly 'invoices' in MySQL
+        # so it perfectly matches the n8n query we just wrote!
+        db_table = 'invoices' 
+
+    def __str__(self):
+        return f"{self.supplier_name} - ${self.amount}"
+
+class Supplier(models.Model):
+    name = models.CharField(max_length=255)
+    email = models.EmailField()
+    reliability_score = models.IntegerField(default=98) # e.g., 98 for 98%
+    avg_delivery_days = models.IntegerField(default=2)
+
+    def __str__(self):
+        return self.name

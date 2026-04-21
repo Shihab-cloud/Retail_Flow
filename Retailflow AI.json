@@ -1,0 +1,283 @@
+{
+  "name": "Retailflow AI",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "buy-product",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        176,
+        528
+      ],
+      "id": "95ab538c-ec6a-4ac3-ab28-f2ed287cdf25",
+      "name": "Webhook",
+      "webhookId": "c163c092-9dd5-4219-8cf1-c531db6ea4ae"
+    },
+    {
+      "parameters": {
+        "content": "## Inventory management ,restock alert, sales data collection agent\n",
+        "height": 400,
+        "width": 2176
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "c4166843-eb76-4444-814e-d67461b7cb6b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE products\nset stock=stock-{{ $json.body.quantity }}\nwhere id ={{ $json.body.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        624,
+        432
+      ],
+      "id": "c94c8dad-0c01-4184-8db0-77bd097bd211",
+      "name": "updating inventory",
+      "credentials": {
+        "mySql": {
+          "id": "COOvaO3RdtNB2qoz",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7d0daa87-7dd9-4677-aa8a-964dcca5c084",
+              "name": "body.quantity",
+              "value": "={{ $json.body.quantity }}",
+              "type": "number"
+            },
+            {
+              "id": "1de80456-96bd-432c-ac6b-691901663f87",
+              "name": "body.id",
+              "value": "={{ $json.body.id }}",
+              "type": "number"
+            },
+            {
+              "id": "265226d5-5999-4945-8077-599f179c969f",
+              "name": "body.customer_id",
+              "value": "={{ $json.body.customer_id }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        528
+      ],
+      "id": "a7fd0490-cc49-442b-b65b-d4eb6568abcf",
+      "name": "mapping"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO sales (product_id, quantity, customer_id) \nVALUES ({{ $('mapping').item.json.body.id }}, {{ $('mapping').item.json.body.quantity }}, 2)",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        624,
+        576
+      ],
+      "id": "c5b830b7-9dd9-4e6c-8b5f-ab0294cafdbc",
+      "name": "sales update",
+      "credentials": {
+        "mySql": {
+          "id": "COOvaO3RdtNB2qoz",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT name, stock, price FROM products WHERE id = {{ $('mapping').item.json.body.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        1088,
+        432
+      ],
+      "id": "318a062e-26d7-437d-8c82-75a2cc2092df",
+      "name": "product_quantity",
+      "credentials": {
+        "mySql": {
+          "id": "COOvaO3RdtNB2qoz",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "shihabalrezwan00@gmail.com",
+        "subject": "Low Inventory Alert – Immediate Attention Required",
+        "emailType": "text",
+        "message": "=Hello Supplier,\n\nThis is an automated request from the RetailFlow AI system. \nPlease generate a Purchase Order for {{ $json.content.parts[0].text }} units of {{ $('product_quantity').item.json.name }}.\n\nThank you.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        512
+      ],
+      "id": "e48345b3-749d-44ad-b72c-444d26b5e911",
+      "name": "Restock alert mail",
+      "webhookId": "29f906c3-85bd-45e3-b2fb-a5d5ff5ff14f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zUTr5IYbl54be9dP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are the Smart Reorder Decision Agent for the RetailFlow AI system.\n\nThe current stock quantity for this item is: {{ $json.stock }}\n\nYour rules:\n1. The minimum safety stock threshold is 20 units.\n2. The maximum shelf capacity is 100 units.\n3. If the current stock is strictly below 20, calculate how many units need to be ordered to reach exactly 100.\n4. If the stock is 20 or above, the reorder amount is 0.\n\nCRITICAL: Output ONLY the final calculated number. Do not say \"The reorder amount is...\" or include any punctuation. Return just the integer."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1456,
+        432
+      ],
+      "id": "526a7eba-f7be-4b2d-bba0-d9c6f1fdc10f",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "uIbJE26uxUM4ucr0",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "mapping": [
+      {
+        "json": {
+          "body": {
+            "quantity": 1,
+            "id": 3,
+            "customer_id": 11
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mapping": {
+      "main": [
+        [
+          {
+            "node": "updating inventory",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "sales update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "product_quantity": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "updating inventory": {
+      "main": [
+        [
+          {
+            "node": "product_quantity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Restock alert mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9d4897dd-45a0-416e-b213-d5861a2a3b91",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "39ae8e95327548d33983ff1da8890d929a7c31a1dd477a04755c2e054ca1fd75"
+  },
+  "id": "0wS2JZ0aYGzNfjtJ",
+  "tags": []
+}

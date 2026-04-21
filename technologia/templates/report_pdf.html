@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+
+        body {
+            font-family: Helvetica, Arial, sans-serif;
+            color: #333;
+        }
+
+        .header {
+            background-color: #1F2937;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 24pt;
+        }
+
+        .header p {
+            margin: 5px 0 0 0;
+            font-size: 12pt;
+            color: #9CA3AF;
+        }
+
+        .stats-table {
+            width: 100%;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        .stats-table td {
+            width: 33%;
+            padding: 15px;
+            background-color: #F3F4F6;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 10pt;
+            color: #6B7280;
+            text-transform: uppercase;
+        }
+
+        .stat-val {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #1F2937;
+            margin-top: 5px;
+        }
+
+        .val-green {
+            color: #10B981;
+        }
+
+        .val-blue {
+            color: #3B82F6;
+        }
+
+        .val-purple {
+            color: #A855F7;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 10pt;
+        }
+
+        .data-table th {
+            background-color: #E5E7EB;
+            color: #374151;
+            padding: 8px;
+            text-align: left;
+            border-bottom: 2px solid #D1D5DB;
+        }
+
+        .data-table td {
+            padding: 8px;
+            border-bottom: 1px solid #E5E7EB;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <h1>RetailFlow AI</h1>
+        <p>Executive Summary Report - {{ current_date }}</p>
+    </div>
+
+    <table class="stats-table">
+        <tr>
+            <td>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-val val-green">${{ total_revenue|floatformat:2 }}</div>
+            </td>
+            <td>
+                <div class="stat-label">Total Transactions</div>
+                <div class="stat-val val-blue">{{ total_sales_count }}</div>
+            </td>
+            <td>
+                <div class="stat-label">Stockouts Prevented</div>
+                <div class="stat-val val-purple">{{ stockouts_prevented }}</div>
+            </td>
+        </tr>
+    </table>
+
+    <h2 style="color: #1F2937; border-bottom: 1px solid #D1D5DB; padding-bottom: 5px;">AI System Alerts & Actions</h2>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="width: 20%;">Timestamp</th>
+                <th style="width: 15%;">Product ID</th>
+                <th style="width: 65%;">AI Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for alert in alerts %}
+            <tr>
+                <td>{{ alert.created_at|date:"Y-m-d H:i" }}</td>
+                <td><strong>{{ alert.product_id }}</strong></td>
+                <td>{{ alert.message }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3">No alerts recorded for this period.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+
+</html>

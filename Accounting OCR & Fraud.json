@@ -1,0 +1,260 @@
+{
+  "name": "Accounting OCR & Fraud",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoice-ocr",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -688,
+        0
+      ],
+      "id": "d0b6ef71-ee41-440a-9179-e06d59793474",
+      "name": "Webhook",
+      "webhookId": "c042523e-0206-43be-92c9-68fbfdf3eac5"
+    },
+    {
+      "parameters": {
+        "resource": "document",
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "text": "You are an expert AI Accounting Assistant. Read the attached invoice and extract the core data.\n\nReturn EXACTLY a JSON object with this structure (do not include any markdown formatting like ```json, just the raw JSON):\n{\n  \"supplier_name\": \"Name of the company\",\n  \"total_amount\": 0.00,\n  \"invoice_date\": \"YYYY-MM-DD\"\n}",
+        "inputType": "binary",
+        "binaryPropertyName": "invoice",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -432,
+        0
+      ],
+      "id": "2365f221-d22a-40ac-803a-da7a529254b6",
+      "name": "Analyze document",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "uIbJE26uxUM4ucr0",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd4c4a90-a228-4277-899c-b4fd994f596d",
+              "name": "invoice_data",
+              "value": "={{ JSON.parse($json.content.parts[0].text) }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -208,
+        0
+      ],
+      "id": "546163c6-e53a-4519-9314-79202039bcc3",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are the lead Fraud Detection Auditor for RetailFlow AI. \n\nA new invoice just arrived from our supplier, {{ $('Edit Fields').item.json.invoice_data.supplier_name }}. \nThe total amount on this new invoice is ${{ $('Edit Fields').item.json.invoice_data.total_amount }}.\n\nHere is the historical context from our database: \nOur average invoice amount from TechSupply Solutions Ltd. over the past 12 months is exactly $450.00.\n\nYour rules:\n1. Compare the new invoice amount to the historical average. \n2. If the new amount is more than 2x the historical average, output ONLY the word \"FLAGGED: POTENTIAL OVERCHARGE\".\n3. If the amount is normal, output ONLY the word \"APPROVED\".\n\nDo not write any other text or explanation. Output only the status word."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        16,
+        0
+      ],
+      "id": "a93ca7f5-1a73-4bc4-99bd-0fe3bda9f84d",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "uIbJE26uxUM4ucr0",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "88ac6c6c-f15b-4e8e-897f-fd7c5289734f",
+              "leftValue": "={{ $json.content.parts[0].text }}",
+              "rightValue": "APPROVED",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        368,
+        0
+      ],
+      "id": "c69270e9-16fa-438d-a53e-f432772ce384",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "sendTo": "shihabalrezwan00@gmail.com",
+        "subject": "=🚨 FRAUD ALERT: Suspicious Invoice from {{ $('Edit Fields').item.json.invoice_data.supplier_name }}",
+        "message": "=<h2 style=\"color: #d93025;\">🚨 FRAUD ALERT: Action Required</h2> <p>The RetailFlow AI Auditor has caught a suspicious invoice.</p> <ul>   <li><strong>Supplier:</strong> {{ $('Edit Fields').item.json.invoice_data.supplier_name }}</li>   <li><strong>Invoice Amount:</strong> <span style=\"color: red; font-size: 18px;\"><strong>${{ $('Edit Fields').item.json.invoice_data.total_amount }}</strong></span></li> </ul> <p><em>Reason for flag: This amount is significantly higher than the 12-month historical average for this supplier.</em></p> <p>Please log into the RetailFlow dashboard to review the physical document immediately.</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        96
+      ],
+      "id": "57ae06d5-68b1-44ec-b3e1-e9ad46ba1459",
+      "name": "Send a message",
+      "webhookId": "46cec42c-b434-4b8c-a9b5-bd9443b68a0d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "zUTr5IYbl54be9dP",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO invoices (supplier_name, amount, date) \nVALUES ('{{ $('Edit Fields').item.json.invoice_data.supplier_name }}', {{ $('Edit Fields').item.json.invoice_data.total_amount }}, '{{ $('Edit Fields').item.json.invoice_data.invoice_date }}')",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        576,
+        -96
+      ],
+      "id": "40d10b4e-9ac8-471e-a030-4693b1961fa3",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "COOvaO3RdtNB2qoz",
+          "name": "MySQL account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Analyze document",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analyze document": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4f0d22ef-47fe-4276-a2dd-1f2fab6e3747",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "39ae8e95327548d33983ff1da8890d929a7c31a1dd477a04755c2e054ca1fd75"
+  },
+  "id": "7kjJQmMAX3tqkLSg",
+  "tags": []
+}

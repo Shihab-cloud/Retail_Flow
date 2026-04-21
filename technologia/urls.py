@@ -25,4 +25,8 @@ urlpatterns = [
     path('admin-accounting/', views.admin_accounting, name='admin_accounting'),
     path('admin-reports/', views.admin_reports, name='admin_reports'),
     path('admin-settings/', views.admin_settings, name='admin_settings'),
+    path('export-report/', views.export_monthly_report, name='export_monthly_report'),
+    path('resolve-alert/<int:alert_id>/', views.resolve_alert, name='resolve_alert'),
+    path('run-reorder/<int:product_id>/', views.run_reorder_agent, name='run_reorder_agent'),
+    path('sync-n8n/', views.sync_n8n, name='sync_n8n'),
 ]
