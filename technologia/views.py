@@ -523,41 +523,41 @@ def admin_settings(request):
         
     return render(request, 'admin_settings.html')
 
-def export_monthly_report(request):
+#def export_monthly_report(request):
     # 1. Setup the HTTP response to tell the browser to download a CSV file
-    response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="RetailFlow_AI_Monthly_Report.csv"'
+    #response = HttpResponse(content_type='text/csv')
+    #response['Content-Disposition'] = 'attachment; filename="RetailFlow_AI_Monthly_Report.csv"'
 
-    writer = csv.writer(response)
+    #writer = csv.writer(response)
 
     # 2. Write the Executive Summary Header & Stats
-    writer.writerow(['RETAILFLOW AI - EXECUTIVE SUMMARY'])
-    writer.writerow(['-----------------------------------'])
+    #writer.writerow(['RETAILFLOW AI - EXECUTIVE SUMMARY'])
+    #writer.writerow(['-----------------------------------'])
     
-    total_revenue = Sale.objects.aggregate(total=Sum('product__price', default=0))['total']
-    total_sales_count = Sale.objects.count()
-    stockouts_prevented = Alert.objects.count()
+    #total_revenue = Sale.objects.aggregate(total=Sum('product__price', default=0))['total']
+    #total_sales_count = Sale.objects.count()
+    #stockouts_prevented = Alert.objects.count()
 
-    writer.writerow(['Total Revenue ($)', total_revenue if total_revenue else 0.00])
-    writer.writerow(['Total Transactions', total_sales_count])
-    writer.writerow(['Stockouts Prevented', stockouts_prevented])
+    #writer.writerow(['Total Revenue ($)', total_revenue if total_revenue else 0.00])
+    #writer.writerow(['Total Transactions', total_sales_count])
+    #writer.writerow(['Stockouts Prevented', stockouts_prevented])
     
-    writer.writerow([]) # Add a blank line for spacing
-    writer.writerow([])
+    #writer.writerow([]) # Add a blank line for spacing
+    #writer.writerow([])
 
     # 3. Write the AI Alerts Log
-    writer.writerow(['AI SYSTEM ALERTS & ACTIONS'])
-    writer.writerow(['-----------------------------------'])
-    writer.writerow(['Timestamp', 'Product ID', 'AI Message'])
+    #writer.writerow(['AI SYSTEM ALERTS & ACTIONS'])
+    #writer.writerow(['-----------------------------------'])
+    #writer.writerow(['Timestamp', 'Product ID', 'AI Message'])
 
     # Fetch all alerts, newest first
-    alerts = Alert.objects.all().order_by('-created_at')
-    for alert in alerts:
+    #alerts = Alert.objects.all().order_by('-created_at')
+    #for alert in alerts:
         # Format the timestamp to be easily readable in Excel
-        formatted_date = alert.created_at.strftime("%Y-%m-%d %H:%M") if alert.created_at else "N/A"
-        writer.writerow([formatted_date, alert.product_id, alert.message])
+        #formatted_date = alert.created_at.strftime("%Y-%m-%d %H:%M") if alert.created_at else "N/A"
+        #writer.writerow([formatted_date, alert.product_id, alert.message])
 
-    return response
+    #return response
 
 def export_monthly_report(request):
     # 1. Fetch live data
