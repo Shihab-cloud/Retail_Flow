@@ -1,49 +1,183 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <meta charset="utf-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Technologia</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Load FontAwesome for icons (replacing the empty React divs with actual tech icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Custom CSS for the floating animation found in the React globals.css -->
     <style>
-        body { font-family: Arial, sans-serif; background: #0f172a; color: #fff; margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .box { background: #111827; padding: 32px; border-radius: 18px; width: min(420px, 90vw); box-shadow: 0 0 25px rgba(0,0,0,0.45); }
-        h1 { margin-top: 0; }
-        .field { margin-bottom: 16px; }
-        label { display: block; margin-bottom: 6px; color: #cbd5e1; }
-        input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #334155; background: #0f172a; color: #fff; }
-        button { width: 100%; padding: 12px; border: none; border-radius: 10px; background: #22c55e; color: white; font-size: 16px; cursor: pointer; }
-        button:hover { background: #16a34a; }
-        .footer { margin-top: 16px; color: #94a3b8; }
-        .footer a { color: #22c55e; text-decoration: none; }
-        .error { background: #831843; padding: 12px 14px; border-radius: 10px; margin-bottom: 16px; color: #ffe4e6; }
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
     </style>
 </head>
-<body>
-<div class="box">
-    <h1>Login</h1>
-    {% if errors %}
-    <div class="error">
-        <ul style="margin:0; padding-left:18px;">
-            {% for error in errors %}
-            <li>{{ error }}</li>
-            {% endfor %}
-        </ul>
-    </div>
-    {% endif %}
-    <form method="post">
-        {% csrf_token %}
-        <div class="field">
-            <label for="email">Email</label>
-            <input id="email" type="email" name="email" required>
+
+<body class="bg-gray-900 text-gray-100 flex h-screen overflow-hidden font-sans">
+
+    <div class="relative size-full overflow-hidden w-full">
+        <!-- Tech Background Image -->
+        <div class="absolute inset-0">
+            <img src="https://images.unsplash.com/photo-1710402536084-b583dc4df3ca?q=80&w=1920" alt="Tech background"
+                class="size-full object-cover" />
         </div>
-        <div class="field">
-            <label for="password">Password</label>
-            <input id="password" type="password" name="password" required>
+
+        <!-- Blur Overlay (Starts hidden, applied via JS) -->
+        <div id="blur-overlay" class="absolute inset-0 bg-black/50 transition-all duration-1000 backdrop-blur-0"></div>
+
+        <!-- Animated Floating Tech Icons -->
+        <div id="floating-icons"
+            class="absolute inset-0 overflow-hidden pointer-events-none transition-opacity duration-1000 opacity-0 text-white">
+            <div class="absolute top-20 left-10 text-6xl opacity-20" style="animation: float 6s ease-in-out infinite"><i
+                    class="fas fa-microchip"></i></div>
+            <div class="absolute top-40 right-20 text-5xl opacity-20"
+                style="animation: float 7s ease-in-out infinite 0.5s"><i class="fas fa-network-wired"></i></div>
+            <div class="absolute bottom-32 left-20 text-5xl opacity-20"
+                style="animation: float 8s ease-in-out infinite 1s"><i class="fas fa-database"></i></div>
+            <div class="absolute bottom-20 right-32 text-6xl opacity-20"
+                style="animation: float 6.5s ease-in-out infinite 1.5s"><i class="fas fa-server"></i></div>
+            <div class="absolute top-1/2 left-1/4 text-4xl opacity-20"
+                style="animation: float 7.5s ease-in-out infinite 2s"><i class="fas fa-code"></i></div>
+            <div class="absolute top-1/3 right-1/3 text-4xl opacity-20"
+                style="animation: float 8.5s ease-in-out infinite 2.5s"><i class="fas fa-cloud"></i></div>
         </div>
-        <button type="submit">Login</button>
-    </form>
-    <div class="footer">
-        Don't have an account? <a href="{% url 'signup' %}">Sign up</a>
+
+        <!-- Admin Login Button (Slides in via JS) -->
+        <!-- Note: Update the onclick window.location if your admin URL is different -->
+        <button id="admin-btn" onclick="window.location.href='/admin-dashboard/'"
+            class="absolute top-6 right-6 px-6 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-lg text-white hover:bg-white/20 transition-all duration-1000 shadow-lg hover:shadow-xl z-10 opacity-0 translate-x-[200px]">
+            Admin Login
+        </button>
+
+        <!-- Login Form Container -->
+        <div class="relative size-full flex items-center justify-center p-4">
+            <div id="login-container"
+                class="w-full max-w-md transition-all duration-1000 ease-out opacity-0 translate-x-[400px]">
+
+                <!-- Glassmorphism Card -->
+                <div
+                    class="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-10 relative overflow-hidden">
+
+                    <!-- Decorative Blur Elements -->
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl -z-10">
+                    </div>
+                    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/20 rounded-full blur-3xl -z-10">
+                    </div>
+
+                    <!-- Header -->
+                    <div class="text-center mb-8 relative z-10">
+                        <h1 class="text-4xl text-white font-bold">Login</h1>
+                    </div>
+
+                    <!-- Django Error Handling Integration -->
+                    {% if errors %}
+                    <div
+                        class="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-3 rounded-xl mb-6 relative z-10">
+                        <ul class="list-disc pl-5 m-0 text-sm">
+                            {% for error in errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <!-- Login Form -->
+                    <form method="post" class="space-y-6 relative z-10">
+                        {% csrf_token %}
+
+                        <!-- Email Field -->
+                        <div>
+                            <label class="block text-white/90 mb-2 text-sm font-medium" for="email">Email</label>
+                            <input type="email" id="email" name="email" required placeholder="shihabalrezwan@gmail.com"
+                                class="w-full px-4 py-3.5 bg-white/90 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 text-gray-800 placeholder:text-gray-500" />
+                        </div>
+
+                        <!-- Password Field -->
+                        <div>
+                            <label class="block text-white/90 mb-2 text-sm font-medium" for="password">Password</label>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" required placeholder="••••••••"
+                                    class="w-full px-4 py-3.5 bg-white/90 backdrop-blur-sm border border-white/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all duration-300 text-gray-800 placeholder:text-gray-500" />
+                                <button type="button" onclick="togglePassword()"
+                                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-800 transition-colors">
+                                    <i id="pwd-icon" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Remember Me & Forgot Password -->
+                        <div class="flex items-center justify-between text-sm">
+                            <label class="flex items-center text-white/90 cursor-pointer">
+                                <input type="checkbox" name="remember"
+                                    class="mr-2 rounded border-gray-300 text-emerald-500 focus:ring-emerald-500" />
+                                Remember me
+                            </label>
+                            <a href="#" class="text-emerald-300 hover:text-emerald-200 transition-colors">Forgot
+                                password?</a>
+                        </div>
+
+                        <!-- Login Button -->
+                        <button type="submit"
+                            class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-emerald-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98]">
+                            Login
+                        </button>
+
+                        <!-- Sign Up Link -->
+                        <p class="text-center text-white/80 text-sm mt-4">
+                            Don't have an account? <a href="{% url 'signup' %}"
+                                class="text-emerald-300 hover:text-emerald-200 transition-colors font-medium">Sign
+                                up</a>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+
+    <!-- JavaScript to handle React functionality -->
+    <script>
+        // React `useEffect` equivalent for entrance animations
+        document.addEventListener("DOMContentLoaded", () => {
+            // Stage 2: Slide in content from right (1s)
+            setTimeout(() => {
+                document.getElementById('admin-btn').classList.remove('opacity-0', 'translate-x-[200px]');
+                document.getElementById('login-container').classList.remove('opacity-0', 'translate-x-[400px]');
+            }, 1000);
+
+            // Stage 3: Apply blur effect (2s)
+            setTimeout(() => {
+                document.getElementById('blur-overlay').classList.replace('backdrop-blur-0', 'backdrop-blur-sm');
+                document.getElementById('floating-icons').classList.remove('opacity-0');
+            }, 2000);
+        });
+
+        // React `useState(showPassword)` equivalent
+        function togglePassword() {
+            const pwdInput = document.getElementById('password');
+            const pwdIcon = document.getElementById('pwd-icon');
+
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                pwdIcon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                pwdInput.type = 'password';
+                pwdIcon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+    </script>
 </body>
+
 </html>

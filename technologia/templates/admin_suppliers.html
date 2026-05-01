@@ -10,6 +10,7 @@
 
 <body class="bg-gray-900 text-gray-100 flex h-screen overflow-hidden font-sans">
 
+    <!-- Sidebar Navigation -->
     <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
         <div class="h-16 flex items-center px-6 border-b border-gray-700">
             <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-robot mr-2"></i>RetailFlow <span
@@ -22,6 +23,7 @@
             <a href="{% url 'admin_inventory' %}"
                 class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
                     class="fas fa-boxes w-6"></i> Inventory & AI</a>
+            <!-- Active State for Suppliers -->
             <a href="{% url 'admin_suppliers' %}" class="block px-4 py-2 bg-blue-600 text-white rounded transition"><i
                     class="fas fa-truck w-6"></i> Suppliers</a>
             <a href="{% url 'admin_accounting' %}"
@@ -40,6 +42,7 @@
     </aside>
 
     <main class="flex-1 flex flex-col overflow-y-auto">
+        <!-- Page Header -->
         <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center justify-between px-8">
             <h2 class="text-xl font-semibold">Supplier & Procurement Management</h2>
             <button id="toggle-vendor-form"
@@ -52,7 +55,7 @@
 
             <!-- Add New Vendor Form (hidden by default) -->
             <div id="add-vendor-form" class="hidden">
-                <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 w-1/2">
+                <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg p-6 w-full max-w-2xl">
                     <h3 class="font-semibold text-lg mb-4"><i class="fas fa-plus text-blue-400 mr-2"></i> Add New Vendor
                     </h3>
                     <form method="POST" action="{% url 'admin_suppliers' %}">
@@ -60,21 +63,22 @@
                         <div class="mb-3">
                             <label class="text-gray-300 text-sm">Vendor Name</label>
                             <input type="text" name="name" required
-                                class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white mt-1">
+                                class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white mt-1 focus:border-blue-500 focus:outline-none">
                         </div>
                         <div class="mb-4">
                             <label class="text-gray-300 text-sm">Email Address</label>
                             <input type="email" name="email" required
-                                class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white mt-1">
+                                class="w-full p-2 bg-gray-900 border border-gray-600 rounded text-white mt-1 focus:border-blue-500 focus:outline-none">
                         </div>
                         <button type="submit"
-                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full">
+                            class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded w-full transition shadow">
                             Save Vendor
                         </button>
                     </form>
                 </div>
             </div>
 
+            <!-- Active Purchase Orders Section -->
             <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center bg-gray-750">
                     <h3 class="font-semibold text-lg"><i class="fas fa-file-contract text-blue-400 mr-2"></i> Active
@@ -96,31 +100,63 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-700 text-sm">
+
+                            <!-- Loop through the AI alerts from your database -->
+                            {% for restock in pending_restocks %}
                             <tr class="hover:bg-gray-750 transition">
-                                <td class="py-3 font-mono text-blue-400">PO-2026-089</td>
-                                <td class="py-3">TechDistributors Inc.</td>
-                                <td class="py-3">12x Keyboards, 5x Mice</td>
-                                <td class="py-3"><span class="text-yellow-400"><i class="fas fa-clock mr-1"></i>
-                                        Awaiting Approval</span></td>
+                                <!-- Generate a dynamic PO Number based on the alert ID -->
+                                <td class="py-3 font-mono text-blue-400">PO-AI-00{{ restock.id }}</td>
+
+                                <!-- Generic AI Sourcing Label -->
+                                <td class="py-3 text-gray-300">Automated AI Sourcing</td>
+
+                                <!-- Safely pull the product name that needs restocking -->
+                                <td class="py-3">{{ restock.product.name|default:"Unknown Item" }} (Restock Required)
+                                </td>
+
+                                <td class="py-3">
+                                    <span class="text-yellow-400"><i class="fas fa-clock mr-1"></i> Awaiting
+                                        Approval</span>
+                                </td>
                                 <td class="py-3 text-right">
-                                    <button class="text-green-400 hover:text-green-300 mr-3"><i
-                                            class="fas fa-check"></i> Approve & Send</button>
+                                    <form method="POST" action="{% url 'approve_po' restock.id %}" class="m-0 p-0">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                            class="text-green-400 hover:text-green-300 mr-3 transition font-bold flex items-center justify-end w-full">
+                                            <i class="fas fa-paper-plane mr-2"></i> Approve & Send
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
+
+                            <!-- What to show if there are no low-stock alerts -->
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-gray-500">
+                                    <i class="fas fa-check-circle text-green-500 mb-2 text-2xl block"></i>
+                                    <p class="italic">No pending AI restock orders.</p>
+                                    <p class="text-xs mt-1">Inventory levels across all product lines are currently
+                                        optimal.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+
                         </tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- Vendor Directory Section -->
             <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
+                <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center bg-gray-750">
                     <h3 class="font-semibold text-lg">Vendor Directory</h3>
                 </div>
                 <div class="p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         {% for supplier in suppliers %}
-                        <div class="border border-gray-700 rounded p-4 bg-gray-750">
-                            <h4 class="font-bold text-lg mb-1">{{ supplier.name }}</h4>
+                        <div
+                            class="border border-gray-700 rounded p-4 bg-gray-750 hover:border-gray-500 transition shadow">
+                            <h4 class="font-bold text-lg mb-1 text-white">{{ supplier.name }}</h4>
                             <p class="text-sm text-gray-400 mb-3"><i class="fas fa-envelope mr-1"></i>
                                 {{ supplier.email }}</p>
                             <div class="text-xs text-gray-500">
@@ -130,7 +166,8 @@
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-gray-400">No vendors added yet.</p>
+                        <p class="text-gray-400 col-span-full">No vendors added yet. Click "Add New Vendor" to get
+                            started.</p>
                         {% endfor %}
                     </div>
                 </div>
@@ -139,9 +176,11 @@
         </div>
     </main>
 
+    <!-- JavaScript to toggle the form -->
     <script>
         document.getElementById('toggle-vendor-form').addEventListener('click', function () {
-            document.getElementById('add-vendor-form').classList.toggle('hidden');
+            const form = document.getElementById('add-vendor-form');
+            form.classList.toggle('hidden');
         });
     </script>
 

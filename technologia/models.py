@@ -48,15 +48,27 @@ class Sale(models.Model):
 
 
 class Alert(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    # --- EXISTING INVENTORY FIELDS ---
+    # Note: We need to add null=True, blank=True to 'product' so that 
+    # fraud alerts don't crash the database looking for a physical item!
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, null=True, blank=True)
     message = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    # --- NEW FRAUD DETECTION FIELDS ---
+    invoice = models.ForeignKey('Invoice', on_delete=models.CASCADE, null=True, blank=True)
+    reason = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
         db_table = 'alerts'
 
     def __str__(self):
-        return f"Alert for {self.product.name}"
+        # A smart string representation to distinguish the alerts in your admin panel
+        if self.invoice:
+            return f"Fraud Alert: Invoice {self.invoice.id}"
+        elif self.product:
+            return f"Stock Alert: {self.product.name}"
+        return "General Alert"
 
 class Invoice(models.Model):
     supplier_name = models.CharField(max_length=255)
@@ -79,3 +91,12 @@ class Supplier(models.Model):
 
     def __str__(self):
         return self.name
+
+class SystemAuditLog(models.Model):
+    action = models.CharField(max_length=255)
+    agent_name = models.CharField(max_length=100) # e.g., 'OCR Agent', 'Reorder Agent'
+    timestamp = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50) # e.g., 'Success', 'Flagged for Fraud'
+
+    def __str__(self):
+        return f"{self.timestamp} - {self.agent_name}: {self.action}"

@@ -1,6 +1,7 @@
 import json
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
+from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator
 from django.contrib.auth.hashers import make_password, check_password
 from django.db.models import F, Sum, Value
@@ -12,6 +13,9 @@ from django.template.loader import get_template
 from xhtml2pdf import pisa
 import datetime
 from django.contrib import messages
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
+import os
 
 N8N_WEBHOOK_URL = 'http://localhost:5678/webhook-test/buy-product'
 
@@ -434,30 +438,50 @@ def admin_inventory(request):
     })
 
 def admin_suppliers(request):
-    # Handle the "Add New Vendor" form submission
+    # --- 1. HANDLE 'ADD VENDOR' FORM SUBMISSION ---
     if request.method == 'POST':
         name = request.POST.get('name')
         email = request.POST.get('email')
         
-        # Save to the new database table
-        Supplier.objects.create(
-            name=name,
-            email=email,
-            reliability_score=99, # Defaulting to 99% for new vendors
-            avg_delivery_days=2   # Defaulting to 2 days
-        )
+        if name and email: # Quick safety check
+            # Save to the new database table
+            Supplier.objects.create(
+                name=name,
+                email=email,
+                reliability_score=99, # Defaulting to 99% for new vendors
+                avg_delivery_days=2   # Defaulting to 2 days
+            )
         return redirect('admin_suppliers')
 
-    # Fetch all suppliers to display in the Vendor Directory
-    suppliers = Supplier.objects.all()
+    # --- 2. FETCH DASHBOARD DATA ---
+    # Fetch all suppliers to display in the Vendor Directory (newest first)
+    suppliers = Supplier.objects.all().order_by('-id')
     
-    return render(request, 'admin_suppliers.html', {'suppliers': suppliers})
+    # NEW: Fetch ONLY inventory alerts (ignores accounting fraud alerts)
+    pending_restocks = Alert.objects.filter(product__isnull=False).order_by('-created_at')[:3]
+
+    # --- 3. SEND TO HTML ---
+    context = {
+        'suppliers': suppliers,
+        'pending_restocks': pending_restocks, # Pass the AI alerts to the page
+    }
+    
+    return render(request, 'admin_suppliers.html', context)
 
 def admin_accounting(request):
     # --- 1. HANDLE THE FILE UPLOAD (AI OCR Agent) ---
     if request.method == 'POST' and request.FILES.get('invoice_file'):
         uploaded_file = request.FILES['invoice_file']
-        n8n_url = 'http://localhost:5678/webhook-test/invoice-ocr'
+        
+        # 1. FORCE the storage location to your settings.MEDIA_ROOT
+        fs = FileSystemStorage(location=settings.MEDIA_ROOT)
+        filename = fs.save(uploaded_file.name, uploaded_file)
+        
+        # CRITICAL FIX: Change 'webhook-test' to 'webhook' (Production URL) 
+        # Otherwise, the system will only work when n8n is open in your browser!
+        n8n_url = 'http://localhost:5678/webhook/invoice-ocr' 
+        
+        uploaded_file.seek(0) # Rewind file pointer just in case
         files = {'invoice': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
         
         try:
@@ -466,25 +490,37 @@ def admin_accounting(request):
             print(f"Error sending to n8n: {e}")
 
     # --- 2. FETCH DASHBOARD DATA ---
-    # The 'or 0.00' ensures the page doesn't crash if the tables are completely empty
-
     total_expenses = Invoice.objects.aggregate(Sum('amount'))['amount__sum'] or 0.00
     total_sales = Sale.objects.aggregate(
         total=Sum(F('product__price') * F('quantity'))
     )['total'] or 0.00
     
-    # Calculate net profit
-    net_profit = float(total_sales) - float(total_expenses)
+    # Calculate raw net profit
+    raw_net_profit = float(total_sales) - float(total_expenses)
+    
+    # FORMATTING FIX: Strip the negative signs for the UI
+    is_loss = raw_net_profit < 0
+    display_net_profit = abs(raw_net_profit)
 
     # Grab the 5 most recent invoices to display in your table
     recent_invoices = Invoice.objects.order_by('-date')[:5]
+    
+    # FORMATTING FIX: Clean up the individual ledger amounts
+    for entry in recent_invoices:
+        entry.is_expense = float(entry.amount) < 0 # Check if it's negative
+        entry.display_amount = abs(float(entry.amount)) # Make it positive for the UI
+
+    # NEW: Fetch any active fraud alerts from the database
+    fraud_alerts = Alert.objects.filter(invoice__isnull=False)
 
     # --- 3. SEND DATA TO HTML ---
     context = {
         'total_expenses': total_expenses,
         'total_sales': total_sales,
-        'net_profit': net_profit,
+        'net_profit': display_net_profit, 
+        'is_loss': is_loss,               
         'recent_invoices': recent_invoices,
+        'fraud_alerts': fraud_alerts,     # <-- This makes the UI red box work!
     }
 
     return render(request, 'admin_accounting.html', context)
@@ -605,7 +641,7 @@ def run_reorder_agent(request, product_id):
     product = get_object_or_404(Product, id=product_id)
     
     # YOUR EXACT PRODUCTION URL:
-    n8n_webhook_url = 'http://localhost:5678/webhook/buy-product'
+    n8n_webhook_url = 'http://localhost:5678/webhook/admin-reorder'
     
     # The Payload: This is the data Django sends to n8n so the AI knows what to buy!
     payload = {
@@ -642,3 +678,110 @@ def sync_n8n(request):
         messages.error(request, "Connection Error: Sync webhook not found yet.")
 
     return redirect('admin_inventory')
+
+def upload_invoice(request):
+    if request.method == 'POST' and request.FILES.get('invoice_file'):
+        uploaded_file = request.FILES['invoice_file']
+        
+        # 1. Save the file locally in Django's Media folder
+        fs = FileSystemStorage()
+        filename = fs.save(uploaded_file.name, uploaded_file)
+        file_url = fs.url(filename)
+        
+        # 2. (Optional but Recommended) Create an initial "Pending" database record
+        # new_invoice = Invoice.objects.create(file_path=file_url, status='Processing')
+
+        # 3. Forward the file to your n8n Production Webhook
+        n8n_webhook_url = "http://localhost:5678/webhook/invoice-ocr"
+        
+        try:
+            # We rewind the file pointer to the beginning before sending it
+            uploaded_file.seek(0)
+            files = {'file': (uploaded_file.name, uploaded_file.read(), uploaded_file.content_type)}
+            
+            # Post to n8n
+            response = requests.post(n8n_webhook_url, files=files)
+            
+            if response.status_code == 200:
+                messages.success(request, "Invoice uploaded and sent to AI for processing!")
+            else:
+                messages.error(request, "File saved locally, but n8n processing failed.")
+                
+        except Exception as e:
+            messages.error(request, f"Error communicating with n8n: {str(e)}")
+            
+        return redirect('admin_accounting') # Redirect back to the main page
+        
+    return redirect('admin_accounting')
+
+# 1. Renders the new webpage
+def review_invoice(request, invoice_id):
+    invoice = get_object_or_404(Invoice, id=invoice_id)
+    alert = Alert.objects.filter(invoice=invoice).first()
+    
+    return render(request, 'review_invoice.html', {'invoice': invoice, 'alert': alert})
+
+# 2. Handles the button clicks
+def process_invoice_action(request, invoice_id):
+    if request.method == 'POST':
+        invoice = get_object_or_404(Invoice, id=invoice_id)
+        alert = Alert.objects.filter(invoice=invoice).first()
+        action = request.POST.get('action')
+
+        if action == 'approve':
+            # Find the product and add the stock
+            product = Product.objects.get(name=invoice.item_name)
+            product.stock += invoice.quantity
+            product.save()
+            
+            # Update the invoice status
+            invoice.status = 'Approved'
+            invoice.save()
+            
+            # Delete the alert notification
+            if alert:
+                alert.delete()
+                
+            messages.success(request, f"Invoice {invoice.id} approved. Stock updated!")
+
+        elif action == 'decline':
+            # Delete the invoice entirely
+            invoice.delete()
+            
+            # Delete the alert notification
+            if alert:
+                alert.delete()
+                
+            messages.error(request, f"Invoice declined and deleted from the system.")
+
+        # Route the admin back to the main dashboard
+        return redirect('admin_accounting')
+
+def approve_po(request, alert_id):
+    if request.method == 'POST':
+        # 1. Grab the specific restock alert from the database
+        alert = get_object_or_404(Alert, id=alert_id)
+        
+        # 2. Package the exact data n8n needs to process the order
+        # (If your Product model links to a Supplier, you can pull the real email dynamically here)
+        payload = {
+            "alert_id": alert.id,
+            "product_name": alert.product.name if alert.product else "Automated Sourcing",
+            "supplier_email": "vendor@techdistributors.com" # Hardcoded for the demo, or link to your Supplier model
+        }
+        
+        # 3. Shoot the data to your n8n Webhook
+        # IMPORTANT: Replace this with the actual Test URL you copied from n8n!
+        webhook_url = "http://localhost:5678/webhook/approve-po"
+        
+        try:
+            # We use a quick 3-second timeout so your Django dashboard never freezes, even if n8n is turned off
+            requests.post(webhook_url, json=payload, timeout=3)
+        except requests.exceptions.RequestException as e:
+            print(f"System Notice: Failed to reach n8n webhook - {e}")
+            
+        # 4. Redirect back to the dashboard. 
+        # (n8n will delete the database row in the background, so the table will automatically update!)
+        return redirect('admin_suppliers')
+        
+    return redirect('admin_suppliers')

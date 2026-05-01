@@ -1,0 +1,102 @@
+{
+  "name": "PO Approval Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "approve-po",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -400,
+        0
+      ],
+      "id": "bb181f55-a41e-4255-b94f-60f653730b8a",
+      "name": "Webhook",
+      "webhookId": "b2ac25bb-942e-4fe2-82c0-ae17f1c26e2f"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM alerts WHERE id = {{ $json.body.alert_id }};",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        -192,
+        0
+      ],
+      "id": "bcdee82d-25e5-4f57-8510-31fe9b840127",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "mySql": {
+          "id": "LqCaJvLVJSWsch7t",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook').item.json.body.supplier_email }}",
+        "subject": "Official Purchase Order - RetailFlow Replenishment",
+        "message": "=<div style=\"font-family: Arial, Helvetica, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9fafb; padding: 20px; border-radius: 8px;\">\n    \n    <!-- Header -->\n    <div style=\"background-color: #1f2937; padding: 20px; border-radius: 8px 8px 0 0; text-align: center;\">\n        <h2 style=\"margin: 0; font-size: 24px; color: #60a5fa;\">RetailFlow <span style=\"color: #ffffff;\">Admin</span></h2>\n    </div>\n\n    <!-- Body -->\n    <div style=\"background-color: #ffffff; padding: 30px; border-radius: 0 0 8px 8px; border: 1px solid #e5e7eb; border-top: none;\">\n        <p style=\"color: #374151; font-size: 16px; line-height: 1.5;\">Hello,</p>\n        <p style=\"color: #374151; font-size: 16px; line-height: 1.5;\">Please process the following automated restock order:</p>\n\n        <!-- Highlighted Product Box -->\n        <div style=\"background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px 20px; margin: 25px 0; border-radius: 0 4px 4px 0;\">\n            <p style=\"margin: 0; font-size: 18px; color: #1e3a8a;\">\n                <strong>Item:</strong> {{ $('Webhook').item.json.body.product_name }}\n            </p>\n        </div>\n\n        <p style=\"color: #374151; font-size: 16px; line-height: 1.5;\">This order has been officially approved by RetailFlow Administration and is ready for fulfillment.</p>\n\n        <!-- Footer -->\n        <hr style=\"border: none; border-top: 1px solid #e5e7eb; margin: 30px 0 20px 0;\">\n        <p style=\"color: #9ca3af; font-size: 12px; text-align: center; margin: 0;\">\n            Automated via RetailFlow AI Agent<br>\n            Please do not reply directly to this automated address.\n        </p>\n    </div>\n\n</div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        16,
+        0
+      ],
+      "id": "626a2598-361d-47e1-af10-ec261f451d57",
+      "name": "Send a message",
+      "webhookId": "e24ec6c1-e2ca-4d7e-8fba-7aef025226f2",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "o1fcspvGcYBB96Mj",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "6679fd8a-3477-436a-9c40-05e894030205",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ce62150a4f24a409dc3ba82bb588952b8fea7eedf38318e03bd3a93b8f0b9ede"
+  },
+  "id": "hxG5u8NKotIlOxUN",
+  "tags": []
+}

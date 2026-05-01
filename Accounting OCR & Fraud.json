@@ -10,10 +10,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -688,
-        0
+        -1376,
+        96
       ],
-      "id": "d0b6ef71-ee41-440a-9179-e06d59793474",
+      "id": "6fd82bc3-2ff2-4f1e-93f5-a2286dcecc35",
       "name": "Webhook",
       "webhookId": "c042523e-0206-43be-92c9-68fbfdf3eac5"
     },
@@ -26,22 +26,22 @@
           "mode": "list",
           "cachedResultName": "models/gemini-2.5-flash"
         },
-        "text": "You are an expert AI Accounting Assistant. Read the attached invoice and extract the core data.\n\nReturn EXACTLY a JSON object with this structure (do not include any markdown formatting like ```json, just the raw JSON):\n{\n  \"supplier_name\": \"Name of the company\",\n  \"total_amount\": 0.00,\n  \"invoice_date\": \"YYYY-MM-DD\"\n}",
+        "text": "You are an expert AI Accounting Assistant. Read the attached invoice and extract the core data.\n\nReturn EXACTLY a JSON object with this structure (do not include any markdown formatting like ```json, just the raw JSON):\n{\n  \"supplier_name\": \"Name of the company\",\n  \"total_amount\": 0.00,\n  \"invoice_date\": \"YYYY-MM-DD\",\n  \"item_name\": \"Name of the primary product purchased\",\n  \"quantity\": 0\n}",
         "inputType": "binary",
-        "binaryPropertyName": "invoice",
+        "binaryPropertyName": "file",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -432,
-        0
+        -1104,
+        96
       ],
-      "id": "2365f221-d22a-40ac-803a-da7a529254b6",
+      "id": "059aa52b-f965-4e94-87e6-c66dd828bfdc",
       "name": "Analyze document",
       "credentials": {
         "googlePalmApi": {
-          "id": "uIbJE26uxUM4ucr0",
+          "id": "pLS88ockeug0VceI",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
@@ -63,24 +63,24 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        -208,
-        0
+        -880,
+        96
       ],
-      "id": "546163c6-e53a-4519-9314-79202039bcc3",
+      "id": "4b4c3ea4-7113-481d-9db9-e0bd329886d4",
       "name": "Edit Fields"
     },
     {
       "parameters": {
         "modelId": {
           "__rl": true,
-          "value": "models/gemini-2.5-flash",
+          "value": "models/gemini-flash-latest",
           "mode": "list",
-          "cachedResultName": "models/gemini-2.5-flash"
+          "cachedResultName": "models/gemini-flash-latest"
         },
         "messages": {
           "values": [
             {
-              "content": "=You are the lead Fraud Detection Auditor for RetailFlow AI. \n\nA new invoice just arrived from our supplier, {{ $('Edit Fields').item.json.invoice_data.supplier_name }}. \nThe total amount on this new invoice is ${{ $('Edit Fields').item.json.invoice_data.total_amount }}.\n\nHere is the historical context from our database: \nOur average invoice amount from TechSupply Solutions Ltd. over the past 12 months is exactly $450.00.\n\nYour rules:\n1. Compare the new invoice amount to the historical average. \n2. If the new amount is more than 2x the historical average, output ONLY the word \"FLAGGED: POTENTIAL OVERCHARGE\".\n3. If the amount is normal, output ONLY the word \"APPROVED\".\n\nDo not write any other text or explanation. Output only the status word."
+              "content": "=You are the lead Fraud Detection Auditor for RetailFlow AI. \n\nA new invoice just arrived from our supplier, {{ $('Edit Fields').item.json.invoice_data.supplier_name }}. \nThe total amount on this new invoice is ${{ $('Edit Fields').item.json.invoice_data.total_amount }}.\nThe total number of units purchased for that primary product is {{ $json.invoice_data.quantity }}\n\nHere is the historical context from our database: \nOur average invoice amount from any supplier over the past 12 months is exactly $450.00.\n\nYour rules:\n1. Compare the new invoice amount to the historical average. \n2. If the new amount is more than 2x the historical average, output ONLY the word \"FLAGGED: POTENTIAL OVERCHARGE\".\n3. If the amount is normal, output ONLY the word \"APPROVED\".\n\nDo not write any other text or explanation. Output only the status word."
             }
           ]
         },
@@ -90,14 +90,17 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        16,
-        0
+        -688,
+        96
       ],
-      "id": "a93ca7f5-1a73-4bc4-99bd-0fe3bda9f84d",
+      "id": "f02d2755-0cc3-4508-a38d-55ee58b51037",
       "name": "Message a model",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
       "credentials": {
         "googlePalmApi": {
-          "id": "uIbJE26uxUM4ucr0",
+          "id": "pLS88ockeug0VceI",
           "name": "Google Gemini(PaLM) Api account"
         }
       }
@@ -129,10 +132,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        368,
-        0
+        -320,
+        96
       ],
-      "id": "c69270e9-16fa-438d-a53e-f432772ce384",
+      "id": "77396579-eedd-4ddb-8ad3-f26c2c73146b",
       "name": "If"
     },
     {
@@ -145,15 +148,15 @@
       "type": "n8n-nodes-base.gmail",
       "typeVersion": 2.2,
       "position": [
-        576,
-        96
+        -112,
+        192
       ],
-      "id": "57ae06d5-68b1-44ec-b3e1-e9ad46ba1459",
+      "id": "e2cf260d-e4ed-44d8-9d6d-3122dfa4a8b3",
       "name": "Send a message",
       "webhookId": "46cec42c-b434-4b8c-a9b5-bd9443b68a0d",
       "credentials": {
         "gmailOAuth2": {
-          "id": "zUTr5IYbl54be9dP",
+          "id": "o1fcspvGcYBB96Mj",
           "name": "Gmail account"
         }
       }
@@ -161,20 +164,41 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO invoices (supplier_name, amount, date) \nVALUES ('{{ $('Edit Fields').item.json.invoice_data.supplier_name }}', {{ $('Edit Fields').item.json.invoice_data.total_amount }}, '{{ $('Edit Fields').item.json.invoice_data.invoice_date }}')",
+        "query": "INSERT INTO invoices (supplier_name, amount, date) \nVALUES ('{{ $('Edit Fields').item.json.invoice_data.supplier_name }}', {{ $('Edit Fields').item.json.invoice_data.total_amount }}, '{{ $('Edit Fields').item.json.invoice_data.invoice_date }}');\n\nUPDATE products \nSET stock = stock + {{ $('Edit Fields').item.json.invoice_data.quantity }}\nWHERE name LIKE CONCAT('%', '{{ $('Edit Fields').item.json.invoice_data.item_name }}', '%');",
         "options": {}
       },
       "type": "n8n-nodes-base.mySql",
       "typeVersion": 2.5,
       "position": [
-        576,
-        -96
+        -128,
+        -48
       ],
-      "id": "40d10b4e-9ac8-471e-a030-4693b1961fa3",
+      "id": "210236f6-e8aa-42dd-9a53-799d8947c474",
       "name": "Execute a SQL query",
       "credentials": {
         "mySql": {
-          "id": "COOvaO3RdtNB2qoz",
+          "id": "LqCaJvLVJSWsch7t",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 1. Insert the invoice itself\nINSERT INTO invoices (supplier_name, amount, date) \nVALUES ('{{ $('Edit Fields').item.json.invoice_data.supplier_name }}', {{ $('Edit Fields').item.json.invoice_data.total_amount }}, '{{ $('Edit Fields').item.json.invoice_data.invoice_date }}');\n\n-- 2. Insert the reason into the alerts table using the ID we just created\nINSERT INTO alerts (message, created_at, invoice_id, reason) \nVALUES ('Action Required: Suspicious Invoice', \n    NOW(), LAST_INSERT_ID(), 'Amount is significantly higher than the 12-month historical average.');",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.5,
+      "position": [
+        96,
+        192
+      ],
+      "id": "f3d48547-1d95-49b4-b4f2-0645685e46a9",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "mySql": {
+          "id": "LqCaJvLVJSWsch7t",
           "name": "MySQL account"
         }
       }
@@ -243,18 +267,34 @@
           }
         ]
       ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        []
+      ]
+    },
+    "Send a message": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "4f0d22ef-47fe-4276-a2dd-1f2fab6e3747",
+  "versionId": "ee3a4cde-8f87-4043-9e35-18ea5747388b",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "39ae8e95327548d33983ff1da8890d929a7c31a1dd477a04755c2e054ca1fd75"
+    "instanceId": "ce62150a4f24a409dc3ba82bb588952b8fea7eedf38318e03bd3a93b8f0b9ede"
   },
-  "id": "7kjJQmMAX3tqkLSg",
+  "id": "uKolJBYwDzYNoNrn",
   "tags": []
 }

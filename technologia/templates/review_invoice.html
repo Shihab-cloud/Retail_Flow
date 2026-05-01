@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RetailFlow Admin - Review Invoice</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body class="bg-gray-900 text-gray-100 flex h-screen overflow-hidden font-sans">
+
+    <!-- Sidebar Navigation -->
+    <aside class="w-64 bg-gray-800 border-r border-gray-700 flex flex-col">
+        <div class="h-16 flex items-center px-6 border-b border-gray-700">
+            <h1 class="text-xl font-bold text-blue-400"><i class="fas fa-robot mr-2"></i>RetailFlow <span
+                    class="text-white">Admin</span></h1>
+        </div>
+        <nav class="flex-grow p-4 space-y-2">
+            <a href="{% url 'admin_dashboard' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-tachometer-alt w-6"></i> Dashboard</a>
+            <a href="{% url 'admin_inventory' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-boxes w-6"></i> Inventory & AI</a>
+            <a href="{% url 'admin_suppliers' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-truck w-6"></i> Suppliers</a>
+            <a href="{% url 'admin_accounting' %}" class="block px-4 py-2 bg-blue-600 text-white rounded transition"><i
+                    class="fas fa-file-invoice-dollar w-6"></i> Accounting & OCR</a>
+            <a href="{% url 'admin_reports' %}"
+                class="block px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white rounded transition"><i
+                    class="fas fa-chart-line w-6"></i> Reports</a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col overflow-y-auto">
+        <!-- Page Header -->
+        <header class="h-16 bg-gray-800 border-b border-gray-700 flex items-center px-8">
+            <h2 class="text-xl font-semibold text-white">
+                <a href="{% url 'admin_accounting' %}" class="text-blue-400 hover:underline">Accounting</a>
+                <span class="text-gray-500 mx-2">/</span> Review Flagged Invoice
+            </h2>
+        </header>
+
+        <div class="p-8">
+            <div class="max-w-4xl mx-auto">
+
+                <!-- Main Review Card -->
+                <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-2xl overflow-hidden">
+
+                    <!-- Alert Banner -->
+                    <div class="px-8 py-6 bg-red-900 bg-opacity-20 border-b border-red-900/50">
+                        <div class="flex items-center">
+                            <div class="bg-red-500/20 p-3 rounded-full mr-4">
+                                <i class="fas fa-shield-virus text-red-500 text-xl"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-2xl font-bold text-red-400">Anomaly Detected</h2>
+                                <p class="text-gray-300 mt-1 font-medium">{{ alert.reason }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
+
+                        <!-- Left Side: Data Breakdown (Matched to your MySQL columns) -->
+                        <div class="p-8 border-r border-gray-700">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Extracted Invoice
+                                Data</h3>
+
+                            <div class="space-y-6">
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">Supplier Name</label>
+                                    <p class="text-lg font-semibold">{{ invoice.supplier_name }}</p>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm text-gray-400 mb-1">Item</label>
+                                        <p class="text-md">{{ invoice.item_name }}</p>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm text-gray-400 mb-1">Quantity</label>
+                                        <p class="text-md">{{ invoice.quantity }}</p>
+                                    </div>
+                                </div>
+
+                                <div class="pt-4 border-t border-gray-700">
+                                    <label class="block text-sm text-gray-400 mb-1">Total Transaction Amount</label>
+                                    <p class="text-3xl font-bold text-blue-400 font-mono">${{ invoice.amount }}</p>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm text-gray-400 mb-1">Invoice Date</label>
+                                    <p class="text-md text-gray-300"><i class="far fa-calendar-alt mr-2"></i>{{
+                                        invoice.date }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Side: AI Verdict/Context -->
+                        <div class="p-8 bg-gray-900/50">
+                            <h3 class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">AI Auditor
+                                Context</h3>
+                            <div class="bg-gray-800 p-4 rounded border border-gray-700 mb-6">
+                                <p class="text-sm text-gray-400 leading-relaxed italic">
+                                    "The SynergyFlow AI Agent flagged this document because the transaction amount
+                                    exceeds the standard deviation for {{ invoice.supplier_name }}. Requires manual
+                                    override to update ledger."
+                                </p>
+                            </div>
+
+                            <div class="text-xs text-gray-500 space-y-2">
+                                <p><i class="fas fa-fingerprint mr-2"></i> Invoice ID: <span
+                                        class="font-mono text-gray-300">{{ invoice.id }}</span></p>
+                                <p><i class="fas fa-microchip mr-2"></i> Intelligence: Gemini 3 Flash</p>
+                                <p><i class="fas fa-clock mr-2"></i> Logged At: {{ alert.created_at }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Actions -->
+                    <div class="px-8 py-6 bg-gray-800 border-t border-gray-700 flex justify-between items-center">
+                        <a href="{% url 'admin_accounting' %}"
+                            class="text-gray-400 hover:text-white transition text-sm">
+                            <i class="fas fa-arrow-left mr-2"></i> Back to Ledger
+                        </a>
+
+                        <form method="POST" action="{% url 'process_invoice_action' invoice.id %}"
+                            class="flex space-x-4">
+                            {% csrf_token %}
+                            <button type="submit" name="action" value="decline"
+                                class="px-6 py-2 bg-transparent border border-red-600 text-red-500 hover:bg-red-600 hover:text-white font-bold rounded transition flex items-center">
+                                <i class="fas fa-times-circle mr-2"></i> Decline Invoice
+                            </button>
+                            <button type="submit" name="action" value="approve"
+                                class="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded shadow-lg transition flex items-center">
+                                <i class="fas fa-check-double mr-2"></i> Verify & Update
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+</body>
+
+</html>

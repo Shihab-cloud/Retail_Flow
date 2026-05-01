@@ -46,6 +46,19 @@
             <h2 class="text-xl font-semibold">AI Accounting & Invoice Processing</h2>
         </header>
 
+        <!-- Notification Alerts -->
+        {% if messages %}
+        <div class="px-8 pt-6 pb-2">
+            {% for message in messages %}
+            <div
+                class="p-4 mb-4 text-sm font-bold text-white rounded-lg 
+                        {% if message.tags == 'success' %}bg-green-600{% elif message.tags == 'error' %}bg-red-600{% else %}bg-blue-600{% endif %} shadow-lg">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
         <div class="p-8 space-y-8">
 
             <!-- Summary Cards -->
@@ -59,8 +72,15 @@
                     <p class="text-3xl font-bold text-red-400">${{ total_expenses }}</p>
                 </div>
                 <div class="bg-gray-800 p-6 rounded-lg border border-gray-700 shadow-lg border-t-4 border-t-blue-500">
-                    <h3 class="text-gray-400 text-sm font-semibold mb-1">Net Profit</h3>
-                    <p class="text-3xl font-bold">${{ net_profit }}</p>
+                    <!-- Dynamically change the title -->
+                    <p class="text-sm text-gray-400 font-semibold mb-1">
+                        {% if is_loss %}Net Loss{% else %}Net Profit{% endif %}
+                    </p>
+
+                    <!-- Dynamically change the color and put the minus sign BEFORE the $ -->
+                    <h3 class="text-3xl font-bold {% if is_loss %}text-red-500{% else %}text-green-500{% endif %}">
+                        {% if is_loss %}-{% endif %}${{ net_profit|floatformat:2 }}
+                    </h3>
                 </div>
             </div>
 
@@ -80,7 +100,8 @@
                     <p class="text-sm text-gray-400 mb-4">Upload a PDF or image of an invoice. The n8n OCR Agent will
                         extract line items, validate pricing, and update the ledger.</p>
 
-                    <form method="POST" enctype="multipart/form-data" id="invoiceForm"
+                    <form method="POST" action="{% url 'upload_invoice' %}" enctype="multipart/form-data"
+                        id="invoiceForm"
                         class="border-2 border-dashed border-gray-600 rounded-lg p-8 text-center hover:border-blue-500 transition cursor-pointer bg-gray-750">
                         {% csrf_token %}
 
@@ -163,6 +184,7 @@
                     </script>
                 </div>
 
+                <!-- Fraud Detection Box -->
                 <div class="bg-gray-800 rounded-lg border border-red-900 shadow-lg overflow-hidden">
                     <div
                         class="px-6 py-4 border-b border-red-900 bg-red-900 bg-opacity-20 flex justify-between items-center">
@@ -170,23 +192,27 @@
                         </h3>
                     </div>
                     <div class="p-6">
+                        {% for alert in fraud_alerts %}
                         <div class="bg-gray-750 border-l-4 border-red-500 p-4 rounded mb-3">
                             <p class="text-sm font-bold text-gray-200">Price Anomaly Detected</p>
-                            <p class="text-xs text-gray-400 mt-1">Invoice #INV-992 from Supplier X lists unit price 40%
-                                higher than historical average.</p>
-                            <a href="https://mail.google.com/" target="_blank" style="color: #ff6b6b;"
-                                class="mt-2 text-xs hover:text-red-300 font-semibold">Review Flagged
-                                Invoice &rarr;</a>
+                            <p class="text-xs text-gray-400 mt-1">{{ alert.reason }}</p>
+                            <a href="{% url 'review_invoice' alert.invoice.id %}"
+                                class="mt-2 text-xs hover:text-red-300 font-semibold" style="color: #ff6b6b;">
+                                Review Flagged Invoice &rarr;
+                            </a>
                         </div>
+                        {% empty %}
                         <div class="bg-gray-750 border-l-4 border-green-500 p-4 rounded">
-                            <p class="text-sm font-bold text-gray-200">Ledger Reconciled</p>
-                            <p class="text-xs text-gray-400 mt-1">Last 50 transactions match bank records.</p>
+                            <p class="text-sm font-bold text-gray-200">System Clear</p>
+                            <p class="text-xs text-gray-400 mt-1">No pending anomalies to review.</p>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
 
             </div>
 
+            <!-- Recent Ledger Entries — full width, outside the grid -->
             <div class="bg-gray-800 rounded-lg border border-gray-700 shadow-lg overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-700 flex justify-between items-center">
                     <h3 class="font-semibold text-lg">Recent Ledger Entries</h3>

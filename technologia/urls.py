@@ -29,4 +29,8 @@ urlpatterns = [
     path('resolve-alert/<int:alert_id>/', views.resolve_alert, name='resolve_alert'),
     path('run-reorder/<int:product_id>/', views.run_reorder_agent, name='run_reorder_agent'),
     path('sync-n8n/', views.sync_n8n, name='sync_n8n'),
+    path('review/<int:invoice_id>/', views.review_invoice, name='review_invoice'),
+    path('process/<int:invoice_id>/', views.process_invoice_action, name='process_invoice_action'),
+    path('upload-invoice/', views.upload_invoice, name='upload_invoice'),
+    path('approve-po/<int:alert_id>/', views.approve_po, name='approve_po'),
 ]
